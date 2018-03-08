@@ -1,7 +1,8 @@
-import websockets
 import asyncio
 
-from . import event as e
+import websockets
+
+from server import event as e
 
 
 class Server:
@@ -9,7 +10,7 @@ class Server:
     Main server class that controls socket instance
     """
     def __init__(self):
-        self.socket = websockets.Socket
+        pass
 
     def start(self):
         asyncio.get_event_loop().run_until_complete(
@@ -17,4 +18,4 @@ class Server:
         asyncio.get_event_loop().run_forever()
 
     async def handle_msg(self, msg: e.GameMsg):
-        
+        pass
