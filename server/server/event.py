@@ -8,18 +8,11 @@ MSG_TYPE_FIELD = 'msg_type'  # must be identical to GameMsg class name
 
 
 class GameMsg:
-    def __init__(self, msg_id: str=''):
-        self.uuid: str = msg_id or str(uuid.uuid4())
+    def __init__(self, **kwargs):
+        self.uuid: str = kwargs.get('uuid', str(uuid.uuid4()))
 
-    @classmethod
-    def from_json_dict(cls, d: dict) -> 'GameMsg':
-        """
-        Re-creates GameMsg from dictionary produced from json.
-        :param d: dict
-        :return: GameMsg
-        """
-        msg_id: str = d[MSG_UUID_FIELD]
-        return GameMsg(msg_id)
+        for kw in filter(lambda kw_: kw_ not in self.__dict__, kwargs):
+            raise ValueError(f'Unexpected, unused kwarg(s) passed: {kw}')
 
     @property
     def json_dict(self):
@@ -31,6 +24,18 @@ class GameMsg:
             MSG_UUID_FIELD: self.uuid,
             MSG_TYPE_FIELD: self.__class__.__name__
         }
+
+
+class TestMsg(GameMsg):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.test_str = kwargs['test_str']
+
+    @property
+    def json_dict(self):
+        d = super().json_dict
+        d['test_str'] = self.test_str
+        return d
 
 
 class MsgEncoder(json.JSONEncoder):
@@ -52,4 +57,5 @@ def msg_hook(d: dict) -> 'GameMsg':
     except KeyError as e:
         raise ValueError(f'Could not find GameMsg type {d[MSG_TYPE_FIELD]}', e)
     else:
-        return msg_type.from_json_dict(d)
+        del d[MSG_TYPE_FIELD]
+        return msg_type(**d)
