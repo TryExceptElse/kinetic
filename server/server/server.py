@@ -70,22 +70,36 @@ class Server:
             websockets.serve(self.handle_msg, host, port))
         asyncio.get_event_loop().run_forever()
 
-    async def handle_msg(self, msg: e.GameMsg):
+    async def handle_msg(self, msg: e.GameMsg) -> None:
+        """
+        Handles received GameMsg.
+
+        Passed GameMsg is passed to the mapped sub-handler, and
+        the result (if any) is then sent as a response to the sender.
+
+        Exceptions thrown while handling messages will be logged
+        instead of being allowed to end the server process.
+
+        :param msg: GameMsg
+        :return: Any
+        """
         logger = logging.getLogger(__name__)
         logger.debug(f'Handling msg: {e}')
         # get handler
         try:
             msg_type: ty.Type = type(msg)
-            handler = self.handlers[msg_type]
+            sub_handler = self.handlers[msg_type]
         except KeyError as ex:
             logger.warning(f'No handler for event type: {msg}', ex)
-            return None
+            return
 
         # give msg to sub-handler
         try:
-            return handler(msg)
+            result = sub_handler(msg)
         except Exception as ex:
             logger.warning(f'Exception thrown while handling {msg}', ex)
+
+        # handle result returned by sub-handler
 
     @handler(e.TestMsg)
     def handle_test_msg(self, msg: e.TestMsg) -> ty.Any:
