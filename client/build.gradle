@@ -1,0 +1,193 @@
+group 'com.github.io.fractalbach'
+version '0.0.1'
+
+buildscript {
+    ext.kotlin_version = '1.2.21'
+    ext.web_dir = '../out/production/web'
+    ext.test_dir = '../out/test/client'
+
+    repositories {
+        jcenter()
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.13"
+    }
+}
+
+apply plugin: 'kotlin2js'
+apply plugin: 'org.jetbrains.dokka'
+
+repositories {
+    jcenter()
+}
+configurations {
+    closureCompiler
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+    compile group: 'info.laht.threekt', name: 'wrapper', version: '0.88-ALPHA-3'
+    closureCompiler 'com.google.javascript:closure-compiler:v20180204'
+}
+
+sourceSets {
+    main.kotlin.srcDirs += "src/main/kotlin"
+    test.kotlin.srcDirs += "src/test/kotlin"
+}
+
+compileKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.outputFile = "$project.buildDir.path/js/${project.name}.js"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.moduleKind = 'umd'
+    kotlinOptions.main = "call"
+}
+
+compileTestKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.outputFile = "$project.buildDir.path/js-tests/${project.name}-tests.js"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.moduleKind = 'umd'
+    kotlinOptions.main = "call"
+}
+
+clean.doFirst() {
+    delete("${web_dir}")
+    delete("${test_dir}")
+}
+
+//noinspection GroovyAssignabilityCheck
+task compileClientJS(type: JavaExec) {
+
+    classpath configurations.closureCompiler
+    main = 'com.google.javascript.jscomp.CommandLineRunner'
+
+    def closureArgs = []
+    closureArgs << "--compilation_level=SIMPLE_OPTIMIZATIONS"
+    closureArgs << "--language_in=ECMASCRIPT_2017"
+    closureArgs << "--js_output_file=$web_dir/client.js"
+    closureArgs << "build/js/client.js"
+    //noinspection GroovyAssignabilityCheck
+    args closureArgs
+
+    dependsOn build
+}
+
+//noinspection GroovyAssignabilityCheck
+task compileKotlinJS(type: JavaExec) {
+
+    classpath configurations.closureCompiler
+    main = 'com.google.javascript.jscomp.CommandLineRunner'
+
+    def closureArgs = []
+    closureArgs << "--compilation_level=SIMPLE_OPTIMIZATIONS"
+    closureArgs << "--language_in=ECMASCRIPT_2017"
+    closureArgs << "--js_output_file=$web_dir/lib/kotlin.js"
+    closureArgs << "./${web_dir}/lib/kotlin.js"
+    //noinspection GroovyAssignabilityCheck
+    args closureArgs
+
+    dependsOn build
+}
+
+//noinspection GroovyAssignabilityCheck
+task compileJS() {
+    dependsOn compileClientJS, compileKotlinJS
+}
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
+}
+
+build.doLast() {
+    // Copy kotlin.js and kotlin-meta.js from jar into web directory
+    configurations.compile.each { File file ->
+        copy {
+            includeEmptyDirs = false
+
+            from zipTree(file.absolutePath)
+            into "${projectDir}/${web_dir}/lib"
+            include { fileTreeElement ->
+                def path = fileTreeElement.path
+                path.endsWith(".js") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+            }
+        }
+    }
+    configurations.testCompile.each { File file ->
+        copy {
+            includeEmptyDirs = false
+
+            from zipTree(file.absolutePath)
+            into "${projectDir}/${test_dir}/lib"
+            include { fileTreeElement ->
+                def path = fileTreeElement.path
+                path.endsWith(".js") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+            }
+        }
+    }
+
+    // Unpack build contents
+    copy {
+        File artifact = new File("build/libs/${project.name}-${project.version}.jar")
+        includeEmptyDirs = false
+
+        from zipTree(artifact)
+        into "${web_dir}"
+        include { fileTreeElement ->
+            def path = fileTreeElement.path
+            !(path.startsWith("META-INF/") || path.startsWith("${project.name}"))
+        }
+    }
+
+    // Copy scripts to web directory
+    copy {
+        includeEmptyDirs = false
+        from new File("build/js/client.js")
+        into "${web_dir}"
+    }
+
+    // copy javascript sources
+
+    copy {
+        includeEmptyDirs = false
+        from new File("src/main/js")
+        into "${web_dir}/lib"
+    }
+    copy {
+        includeEmptyDirs = false
+        from new File("src/main/js")
+        into "${test_dir}/lib"
+    }
+    copy {
+        includeEmptyDirs = false
+        from new File("src/test/js")
+        into "${test_dir}/lib"
+    }
+
+    // copy tests
+
+    copy {
+        includeEmptyDirs = false
+        from new File("build/js-tests/")
+        into "${test_dir}"
+    }
+
+    copy {
+        includeEmptyDirs = false
+        from new File("build/resources/test/")
+        into "${test_dir}"
+    }
+
+    // copy files from main output into test
+    copy {
+        includeEmptyDirs = false
+        from new File("${web_dir}/client.js")
+        into "${test_dir}"
+    }
+
+}

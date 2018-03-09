@@ -111,11 +111,12 @@ class Server:
         :param path: ?
         """
         logger = logging.getLogger(__name__)
+        logger.info(f'Receiving from socket: {web_socket} path: {path}')
         async for msg_str in web_socket:
             try:
                 msg = e.decode_msg(msg_str)
             except e.MsgDecodeException as ex:
-                logger.info('Could not decode recieved str', ex)
+                logger.info('Could not decode received str', ex)
             else:
                 await self.handle_msg(web_socket, msg)
 
@@ -175,6 +176,11 @@ class Server:
         """
         logger = logging.getLogger(__name__)
         logger.info(f'New connection requested: {msg}')
+        # Avoid changing existing Connection obj, which could break things.
+        if web_socket in self.connections:
+            logger.info(
+                f'{msg} received from already-registered socket: {web_socket}')
+            return
         # Validation of connection request will need to take place here
         # once client authentication is a concern.
         connection = Connection(web_socket, msg.requested_name)
