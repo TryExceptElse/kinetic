@@ -1,0 +1,21 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# intellij-stuff
+*.iml
+.idea/*
+
+# gradle stuff
+.gradle/*
+
+# build dir
+build/*
+client/build/*
+server/build/*
+
+# compiled python
+*.pyc
