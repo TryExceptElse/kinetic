@@ -8,24 +8,37 @@ MSG_UUID_FIELD = 'uuid'
 MSG_TYPE_FIELD = 'msg_type'  # must be identical to GameMsg class name
 
 
+class MsgDecodeException(Exception):
+    def __init__(self, err_msg: str, s: str, *args, **kwargs):
+        err_msg += 'encoded str: ' + s
+        super(err_msg, *args, **kwargs)
+        self.encoded_string = s
+
+
 class GameMsg:
     """
     Parent class for all messages exchanged between client and server.
     Intended to be converted to json and passed over socket.
     """
     def __init__(self, uuid: str=''):
-        self.uuid: str = uuid or uuid4()
+        self.uuid: str = uuid or str(uuid4())
 
     @property
-    def json_dict(self):
+    def json_dict(self) -> ty.Dict[str, ty.Any]:
         """
         Gets dictionary of attributes to be represented in json.
+        The implementation in GameMsg does nothing special, but
+        may be extended by subclasses.
+
+        values that contain None are not stored in json.
         :return: dict
         """
-        return {
-            MSG_UUID_FIELD: self.uuid,
-            MSG_TYPE_FIELD: self.__class__.__name__
-        }
+        d: ty.Dict[str, ty.Any] = self.__dict__
+        d[MSG_TYPE_FIELD] = self.__class__.__name__
+        return d
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}[\'{self.uuid[-8:]}]'
 
 
 class TestMsg(GameMsg):
@@ -38,11 +51,26 @@ class TestMsg(GameMsg):
         super().__init__(msg_id)
         self.test_str = test_str
 
-    @property
-    def json_dict(self):
-        d = super().json_dict
-        d['test_str'] = self.test_str
-        return d
+
+class ConnectRequestMsg(GameMsg):
+    """
+    Message sent from client to server requesting registration
+    with the server.
+    """
+    def __init__(self, requested_name: str, uuid: str=''):
+        super().__init__(uuid=uuid)
+        self.requested_name: str = requested_name
+
+
+class ConnectConfirmMsg(GameMsg):
+    """
+    Message sent from server to client confirming registration,
+    and giving the client a uuid to use to identify itself.
+    """
+    def __init__(self, registered_name: str, uuid: str):
+        super().__init__()
+        self.registered_name = registered_name
+        self.uuid = uuid
 
 
 class MsgEncoder(json.JSONEncoder):
@@ -80,3 +108,17 @@ def msg_hook(d: ty.Dict[str, ty.Any]) -> 'GameMsg':
     else:
         del d[MSG_TYPE_FIELD]  # remove now-unused field from passed kwargs
         return msg_type(**d)
+
+
+def encode_msg(msg: GameMsg) -> str:
+    if not isinstance(msg, GameMsg):
+        raise TypeError(f'Expected GameMsg, got {msg}')
+    return json.dumps(msg, cls=MsgEncoder)
+
+
+def decode_msg(msg_str: str) -> GameMsg:
+    o: ty.Any = json.loads(msg_str, object_hook=msg_hook)
+    if not isinstance(o, GameMsg):
+        raise MsgDecodeException(
+            'Passed json was not a GameMsg object', msg_str)
+    return o
