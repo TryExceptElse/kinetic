@@ -124,8 +124,8 @@ class Server:
         """
         Handles received GameMsg.
 
-        Passed GameMsg is passed to the mapped sub-handler, and
-        the result (if any) is then sent as a response to the sender.
+        Passed GameMsg is passed to the sub-handler which has been
+        mapped to the message type using the 'handler' decorator.
 
         Exceptions thrown while handling messages will be logged
         instead of being allowed to end the server process.
@@ -136,6 +136,7 @@ class Server:
         """
         logger = logging.getLogger(__name__)
         logger.debug(f'Handling msg: {e}')
+
         # if web socket is not yet registered, don't accept messages
         if web_socket not in self.connections and \
                 not isinstance(msg, e.ConnectRequestMsg):

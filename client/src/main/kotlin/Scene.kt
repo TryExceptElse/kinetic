@@ -66,7 +66,6 @@ class Scene(val name: String="Unnamed", var core: Core?=null) {
         sunLight.position = Double3(1e9, 1e9, 30.0)
 
         // add constant game objects
-        add(terrain)
         add(camera)
         add(sunLight)
         add(ambientLight)

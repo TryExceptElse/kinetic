@@ -1,0 +1,8 @@
+group 'com.github.io.tryexceptelse'
+version '0.0.1'
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.5.1' //version required
+}
+
