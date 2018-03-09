@@ -8,9 +8,10 @@ from uuid import uuid4
 from server import event as e
 from server.model.model import GameModel
 
-# typedefs
+# type aliases
 
-HandlerDict = ty.Dict[ty.Type, ty.Callable[[type, e.GameMsg], ty.Any]]
+Protocol = websockets.WebSocketServerProtocol
+HandlerDict = ty.Dict[ty.Type, ty.Callable[[Protocol, e.GameMsg], ty.Any]]
 
 
 def handler(msg_type: ty.Type):
@@ -48,22 +49,22 @@ class Server:
     def __init__(self):
         self.model = GameModel()
         self.handlers: HandlerDict = self.find_handlers()
-        self.connections = {}
+        self.connections: ty.Dict[object, 'Connection'] = {}
         self._live = False
         self.event_loop: asyncio.AbstractEventLoop or None = None
+        self.socket_server = None
 
-    def find_handlers(self) -> \
-            ty.Dict[ty.Type, ty.Callable[[e.GameMsg], ty.Any]]:
+    def find_handlers(self) -> HandlerDict:
         """
         Finds handlers among own attributes
         :return: dictionary of handlers, with key as handled type.
         """
-        handlers = {}
+        handlers: HandlerDict = {}
         for attr in [getattr(self, attr_name) for attr_name in dir(self)]:
             try:
                 handled_type: ty.Type = get_handled_type(attr)
             except AttributeError:
-                pass
+                pass  # ignore attributes that are not handlers
             else:
                 handlers[handled_type] = attr
         return handlers
@@ -76,22 +77,39 @@ class Server:
         :param port: port
         :return: int exit code
         """
+        if self._live:
+            raise RuntimeError('Server is already running')
         self.event_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.event_loop)
-        asyncio.get_event_loop().run_until_complete(
-            websockets.serve(self.receive, host, port))
+
+        serve = websockets.serve(self.receive, host, port)  # get co-routine
+        self.socket_server = serve.ws_server
+        asyncio.get_event_loop().run_until_complete(serve)
         self._live = True
         asyncio.get_event_loop().run_forever()
 
     def end(self):
         if not self._live:
             raise RuntimeError(f'{self} is not currently live')
-        if not isinstance(self.event_loop, asyncio.AbstractEventLoop):
+        if self.event_loop is None:
             raise RuntimeError(f'{self} does not have an event loop to end')
-        self.event_loop.stop()
+        assert isinstance(self.event_loop, asyncio.AbstractEventLoop)
         self._live = False
 
-    async def receive(self, web_socket, path) -> None:
+        def end_loop():
+            self.socket_server.close()
+            self.event_loop.stop()
+
+        self.event_loop.call_soon_threadsafe(end_loop)
+
+    async def receive(self, web_socket: Protocol, path) -> None:
+        """
+        Handles messages sent from a single connected socket.
+
+        :param web_socket: socket from which messages are being read.
+        :type web_socket: Protocol
+        :param path: ?
+        """
         logger = logging.getLogger(__name__)
         async for msg_str in web_socket:
             try:
@@ -101,7 +119,7 @@ class Server:
             else:
                 await self.handle_msg(web_socket, msg)
 
-    async def handle_msg(self, web_socket, msg: e.GameMsg) -> None:
+    async def handle_msg(self, web_socket: Protocol, msg: e.GameMsg) -> None:
         """
         Handles received GameMsg.
 
@@ -111,11 +129,17 @@ class Server:
         Exceptions thrown while handling messages will be logged
         instead of being allowed to end the server process.
 
+        :param web_socket: socket from which msg was received.
         :param msg: GameMsg
         :return: Any
         """
         logger = logging.getLogger(__name__)
         logger.debug(f'Handling msg: {e}')
+        # if web socket is not yet registered, don't accept messages
+        if web_socket not in self.connections and \
+                not isinstance(msg, e.ConnectRequestMsg):
+            web_socket.close(reason='Not Registered')
+
         # get handler
         try:
             msg_type: ty.Type = type(msg)
@@ -138,16 +162,32 @@ class Server:
 
     @handler(e.ConnectRequestMsg)
     async def handle_connect_req(self, web_socket, msg: e.ConnectRequestMsg):
+        """
+        Handle received ConnectionRequestMsg. This method is
+        responsible for any validation of the request, and creation of
+        a new Connection object to store information about the socket.
+        If the validation fails, this method will close the socket
+        and log the problem.
+
+        :param web_socket: web_socket
+        :param msg: GameMsg
+        :return: None
+        """
         logger = logging.getLogger(__name__)
         logger.info(f'New connection requested: {msg}')
+        # Validation of connection request will need to take place here
+        # once client authentication is a concern.
         connection = Connection(web_socket, msg.requested_name)
         logger.info(f'connection accepted')
-        self.connections[connection.id] = connection
+        self.connections[web_socket] = connection
+
+    def __repr__(self) -> str:
+        return f'Server[live: {self._live}]'
 
 
 class Connection:
-    def __init__(self, web_socket, name: str, uuid: str=''):
-        self.web_socket = web_socket
+    def __init__(self, web_socket: Protocol, name: str, uuid: str=''):
+        self.web_socket: Protocol = web_socket
         self.name: str = name
         self.id: str = uuid or str(uuid4())
 
