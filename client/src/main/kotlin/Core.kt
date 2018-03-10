@@ -136,17 +136,19 @@ class Core {
  * This function appears in JavaScript without name-mangling
  */
 @JsName("startCore")
+
+@Suppress("UNUSED", "UNUSED_PARAMETER") // called from html
 fun startCore(args: Array<String>) {
 
-    if (js("Module.ready") != true) {
-
-        Logger.getLogger("Core").info("Module not yet ready.")
-        window.setTimeout(
-                { startCore(args) },
-                500
-        )
-        return // come back later
-    }
+//    if (js("Module.ready") != true) {
+//
+//        Logger.getLogger("Core").info("Module not yet ready.")
+//        window.setTimeout(
+//                { startCore(args) },
+//                500
+//        )
+//        return // come back later
+//    }
     val core = Core()
     Logger.getLogger("Core").info("Began main loop")
     core.update(0.0)

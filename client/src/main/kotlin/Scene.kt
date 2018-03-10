@@ -1,9 +1,7 @@
-import com.curiouscreature.kotlin.math.Double3
 import info.laht.threekt.math.Color
-import info.laht.threekt.renderers.WebGL2Renderer
+import info.laht.threekt.math.Vector3
 import info.laht.threekt.renderers.WebGLRenderer
 import info.laht.threekt.scenes.Fog
-import info.laht.threekt.scenes.FogExp2
 import info.laht.threekt.scenes.Scene
 import objects.*
 import kotlin.browser.window
@@ -63,7 +61,7 @@ class Scene(val name: String="Unnamed", var core: Core?=null) {
         threeScene.fog.near = 500
         threeScene.fog.far = 120000 // 1e5
 
-        sunLight.position = Double3(1e9, 1e9, 30.0)
+        sunLight.position = Vector3(1e9, 1e9, 30.0)
 
         // add constant game objects
         add(camera)
@@ -135,7 +133,7 @@ class Scene(val name: String="Unnamed", var core: Core?=null) {
     }
 
     fun contains(gameObject: GameObject): Boolean {
-        return gameObjects.containsKey(gameObject.id);
+        return gameObjects.containsKey(gameObject.id)
     }
 
     /**

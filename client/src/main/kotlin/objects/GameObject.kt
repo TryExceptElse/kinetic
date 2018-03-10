@@ -2,10 +2,9 @@ package objects
 
 import Core
 import Scene
-import com.curiouscreature.kotlin.math.Double3
-import com.curiouscreature.kotlin.math.length
 import info.laht.threekt.core.Object3D
 import info.laht.threekt.math.Euler
+import info.laht.threekt.math.Vector3
 
 /**
  * Abstract object from which other game types are extended.
@@ -43,8 +42,8 @@ abstract class GameObject(val name: String="", id: String="") {
     /** Relative position of object in meters. Relative to parent
      * position if GameObject has a parent, otherwise
      * world position. */
-    var position: Double3
-        get() = Double3(threeObject.position)
+    var position: Vector3
+        get() = threeObject.position
         set(pos) {
             threeObject.position.x = pos.x
             threeObject.position.y = pos.y
@@ -52,12 +51,12 @@ abstract class GameObject(val name: String="", id: String="") {
         }
 
     /** Position relative to world origin */
-    var worldPosition: Double3
-        get() = Double3(threeObject.getWorldPosition())
+    var worldPosition: Vector3
+        get() = threeObject.getWorldPosition()
         set(v) = throw NotImplementedError()
 
     /** Motion of object in m/s */
-    var motion: Double3 = Double3()
+    var motion: Vector3 = Vector3()
 
     /** Euler rotation of object relative to parent or world if object
      * has no parent. */
@@ -103,7 +102,7 @@ abstract class GameObject(val name: String="", id: String="") {
      * @return Double distance in meters
      */
     fun distance(other: GameObject): Double {
-        return length(other.worldPosition - worldPosition)
+        return other.worldPosition.sub(worldPosition).length()
     }
 
     /** @suppress String representation of GameObject */

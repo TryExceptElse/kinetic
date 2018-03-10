@@ -1,4 +1,4 @@
-import com.curiouscreature.kotlin.math.Double2
+import info.laht.threekt.math.Vector2
 import org.w3c.dom.Element
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
@@ -70,8 +70,8 @@ class InputHandler(private val container: Element) {
 
     private var pointerCaptured: Boolean = false
 
-    var mouseMotion = Double2()
-    private var mouseMotionBuffer = Double2()
+    var mouseMotion = Vector2()
+    private var mouseMotionBuffer = Vector2()
 
     init {
         window.addEventListener(
@@ -176,7 +176,7 @@ class InputHandler(private val container: Element) {
         if (!pointerCaptured) {
             return
         }
-        mouseMotionBuffer = Double2(
+        mouseMotionBuffer = Vector2(
             js("e.movementX || e.mozMovementX || e.webkitMovementX || 0.0")
                     as Double,
             js("e.movementY || e.mozMovementY || e.webkitMovementY || 0.0")

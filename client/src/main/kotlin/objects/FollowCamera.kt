@@ -1,9 +1,9 @@
 package objects
 
 import Core
-import com.curiouscreature.kotlin.math.Double3
-import com.curiouscreature.kotlin.math.radians
 import info.laht.threekt.math.Euler
+import info.laht.threekt.math.Math
+import info.laht.threekt.math.Vector3
 
 private const val MOUSE_ELEVATION_COEF = 0.0015
 
@@ -16,8 +16,8 @@ open class FollowCamera(name: String="", id: String=""): Camera(name, id) {
     fun follow(followed: GameObject) {
         followed.threeObject.add(threeObject)
         this.followed = followed
-        position = Double3(0.0, -followDistance, followDistance / 2)
-        rotation = Euler(radians(60.0), 0.0, 0.0)
+        position = Vector3(0.0, -followDistance, followDistance / 2)
+        rotation = Euler(Math.degToRad(60.0), 0.0, 0.0)
         logger.debug("$this (pos: $position) now following " +
                 "$followed (pos: ${followed.position})")
     }
