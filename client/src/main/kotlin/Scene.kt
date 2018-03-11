@@ -67,6 +67,11 @@ class Scene(val name: String="Unnamed", var core: Core?=null) {
         add(camera)
         add(sunLight)
         add(ambientLight)
+
+        // add test obj
+        val testSpheroid = Spheroid("TestPlanet", radius=2.0)
+        add(testSpheroid)
+        (camera as FollowCamera).follow(testSpheroid)
     }
 
     /**

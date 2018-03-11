@@ -19,9 +19,7 @@ class TestCube(name: String="", id: String=""): GameObject(name, id) {
         val geometry = BoxGeometry(1, 1, 1, 1)
         val material = MeshStandardMaterial()
         material.color = Color(0x00ff00)
-        // work around error in three.js wrapper; will be fixed soon
-        @Suppress("CAST_NEVER_SUCCEEDS")
-        val mesh = Mesh(geometry, material as Material)
+        val mesh = Mesh(geometry, material)
         return mesh
     }
 }
