@@ -57,6 +57,9 @@ class Server:
     def find_handlers(self) -> HandlerDict:
         """
         Finds handlers among own attributes
+
+        In order to be found by this method, handlers should be
+        decorated using the handler() function.
         :return: dictionary of handlers, with key as handled type.
         """
         handlers: HandlerDict = {}
@@ -88,7 +91,11 @@ class Server:
         self._live = True
         asyncio.get_event_loop().run_forever()
 
-    def end(self):
+    def end(self) -> None:
+        """
+        Ends server loop and attempts to clean up as much as possible
+        :return: None
+        """
         if not self._live:
             raise RuntimeError(f'{self} is not currently live')
         if self.event_loop is None:
@@ -159,7 +166,14 @@ class Server:
                 f'Exception thrown while handling {msg}', exc_info=ex)
 
     @handler(e.TestMsg)
-    async def handle_test_msg(self, web_socket, msg: e.TestMsg) -> ty.Any:
+    async def handle_test_msg(self, web_socket, msg: e.TestMsg):
+        """
+        Handles received test message. This is intended to be used
+        both in and outside of a testing environment.
+        :param web_socket: socket from which message was received.
+        :param msg: TestMsg
+        :return: None
+        """
         send_msg(web_socket, e.TestMsg(test_str=msg.test_str))
 
     @handler(e.ConnectRequestMsg)
@@ -172,7 +186,7 @@ class Server:
         and log the problem.
 
         :param web_socket: web_socket
-        :param msg: GameMsg
+        :param msg: ConnectRequestMsg
         :return: None
         """
         logger = logging.getLogger(__name__)
@@ -193,12 +207,18 @@ class Server:
 
 
 class Connection:
+    """ Connection class handles a single connection to a client """
     def __init__(self, web_socket: Protocol, name: str, uuid: str=''):
         self.web_socket: Protocol = web_socket
         self.name: str = name
         self.id: str = uuid or str(uuid4())
 
     async def send_msg(self, msg: e.GameMsg) -> None:
+        """
+        Sends a message to the client associated with this connection.
+        :param msg: GameMsg
+        :return: None
+        """
         msg_s: str = e.encode_msg(msg)
         await self.web_socket.send(msg_s)
 
