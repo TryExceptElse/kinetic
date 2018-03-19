@@ -1,3 +1,5 @@
 rootProject.name = 'kinetic'
 
 include 'client'
+include 'actor'
+include 'server'

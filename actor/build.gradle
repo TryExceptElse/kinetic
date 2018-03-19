@@ -1,0 +1,46 @@
+group 'com.github.io.tryexceptelse'
+version '0.0.1'
+
+apply plugin: 'cpp'
+
+buildscript {
+    ext.clone_dir = 'build/clone'
+    ext.third_party_dir = 'build/third_party'
+    ext.test_dir = '../out/test/actor'
+}
+
+model {
+    components {
+        actor(NativeLibrarySpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDirs "src", "third_party"
+                    }
+                    exportedHeaders {
+                        srcDirs "src"
+                    }
+                }
+            }
+        }
+        testActor(NativeExecutableSpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDirs "test", 'third_party_test'
+                        cpp.lib library: "actor"
+                    }
+                }
+            }
+        }
+    }
+}
+
+build.doLast {
+    // copy built tests
+    copy {
+        includeEmptyDirs = false
+        from new File("build/exe/testActor")
+        into "${test_dir}"
+    }
+}

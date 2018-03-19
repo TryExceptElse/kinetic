@@ -1,0 +1,34 @@
+group 'com.github.io.tryexceptelse'
+version '0.0.1'
+
+
+buildscript {
+    ext.build_dir = 'build'
+    ext.server_dir = '../out/production/server'
+}
+
+task runServerSetupPy(type:Exec) {
+    workingDir '.'
+    commandLine 'python3', 'setup.py'
+    args  'build', "-b${build_dir}"
+}
+
+task build() {
+    dependsOn
+    dependsOn runServerSetupPy
+
+    doLast {
+        copy {
+            includeEmptyDirs = false
+            from new File("build")
+            into "${server_dir}"
+        }
+    }
+}
+
+task clean() {
+    doLast {
+        delete("${build_dir}")
+        delete("${server_dir}")
+    }
+}

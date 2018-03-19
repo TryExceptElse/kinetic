@@ -1,4 +1,4 @@
-group 'com.github.io.fractalbach'
+group 'com.github.io.tryexceptelse'
 version '0.0.1'
 
 buildscript {
