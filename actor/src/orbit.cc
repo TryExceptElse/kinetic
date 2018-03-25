@@ -43,6 +43,9 @@ double Orbit::MeanAnomaly() const {
     return M;
 }
 
+/**
+ * Gets Current position vector in orbit.
+ */
 Vector Orbit::Position() const {
     const double p = semiparameter();
     Vector r;
@@ -52,6 +55,9 @@ Vector Orbit::Position() const {
     return r - epoch;
 }
 
+/**
+ * Gets Current velocity vector in orbit.
+ */
 Vector Orbit::Velocity() const {
     const double p = semiparameter();
     const double u = ref.gm();
@@ -65,15 +71,13 @@ Vector Orbit::Velocity() const {
     return v;
 }
 
+/**
+ * Calculates orbital elements from passed orbital vectors.
+ */
 void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
-    // calculate specific relative angular momement
-    const Vector h = r * v;
-
-    // calculate vector to the ascending node
-    const Vector n(-h.y, h.x, 0);
-
-    // standard gravity
-    const double u = ref.gm();
+    const Vector h = r * v; // calculate specific relative angular momement
+    const Vector n(-h.y, h.x, 0); // calculate vector to the ascending node
+    const double u = ref.gm(); // standard gravity
 
     // calculate eccentricity vector and scalar
     Vector e = ((v * h) * (1.0 / u)) - (r * (1.0 / r.len()));
@@ -113,6 +117,13 @@ void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
     this->epoch = Position() - r;
 }
 
+/**
+ * Gets the angle between the direction of periapsis and the current
+ * position of the body, as seen from the main focus of the ellipse
+ * (the point around which the object orbits).
+ *
+ * https://en.wikipedia.org/wiki/True_anomaly
+ */
 void Orbit::CalcTrueAnomaly(const double eccentric_anomaly) {
     const double E = eccentric_anomaly;
     this->t = std::acos((std::cos(E) - e) / (1 - e * std::cos(E)));
