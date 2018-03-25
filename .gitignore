@@ -20,3 +20,7 @@ actor/build/*
 
 # compiled python
 *.pyc
+
+# pytest stuff
+*.cache
+*.pytest_cache
