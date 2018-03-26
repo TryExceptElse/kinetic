@@ -1,3 +1,5 @@
+# cython: infer_types=True
+
 import asyncio
 import typing as ty
 import websockets
@@ -5,7 +7,7 @@ import logging
 
 from uuid import uuid4
 
-from server import event as e
+import server.event as e
 from server.model.model import GameModel
 
 # type aliases
@@ -50,7 +52,7 @@ class Server:
         self.model = GameModel()
         self.handlers: HandlerDict = self.find_handlers()
         self.connections: ty.Dict[object, 'Connection'] = {}
-        self._live = False
+        self._live: bool = False
         self.event_loop: asyncio.AbstractEventLoop or None = None
         self.socket_server = None
 
@@ -174,7 +176,7 @@ class Server:
         :param msg: TestMsg
         :return: None
         """
-        send_msg(web_socket, e.TestMsg(test_str=msg.test_str))
+        await self.connections[web_socket].send_msg(e.TestMsg(msg.test_str))
 
     @handler(e.ConnectRequestMsg)
     async def handle_connect_req(self, web_socket, msg: e.ConnectRequestMsg):
@@ -202,7 +204,7 @@ class Server:
         logger.info(f'connection accepted')
         self.connections[web_socket] = connection
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> unicode:
         return f'Server[live: {self._live}]'
 
 
@@ -222,5 +224,5 @@ class Connection:
         msg_s: str = e.encode_msg(msg)
         await self.web_socket.send(msg_s)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> unicode:
         return f'Connection[{self.id[-8:]}]'

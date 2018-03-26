@@ -7,20 +7,26 @@ buildscript {
     ext.server_dir = '../out/production/server'
 }
 
-task runServerSetupPy(type:Exec) {
+task serverSetupPyBuild(type:Exec) {
     workingDir '.'
     commandLine 'python3', 'setup.py'
     args  'build', "-b${build_dir}"
 }
 
 task build() {
-    dependsOn
-    dependsOn runServerSetupPy
+    dependsOn serverSetupPyBuild
 
     doLast {
+        def fromDir = ''
+        file('build').eachDir({
+            if (it.name.startsWith("lib.")) {
+                fromDir = "build/${it.name}"
+                println "found server lib dir: ${fromDir}"
+            }
+        })
         copy {
             includeEmptyDirs = false
-            from new File("build")
+            from new File(fromDir)
             into "${server_dir}"
         }
     }
@@ -28,7 +34,7 @@ task build() {
 
 task clean() {
     doLast {
-        delete("${build_dir}")
-        delete("${server_dir}")
+        delete(build_dir)
+        delete(server_dir)
     }
 }

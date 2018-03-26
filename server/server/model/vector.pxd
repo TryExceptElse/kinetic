@@ -2,6 +2,8 @@
 
 cdef extern from "vector.h" namespace "kin" nogil:
     cdef cppclass Vector:
+        double x, y, z
+
         Vector()
         Vector(double x, double y, double z)
         double len() const
