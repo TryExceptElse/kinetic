@@ -12,21 +12,25 @@
 namespace kin {
 
 
-double Orbit::SemiMinorAxis() const {
+double Orbit::semi_minor_axis() const {
     return std::sqrt(a * a * (1 - e * e));
 }
 
-double Orbit::Period() const {
+double Orbit::period() const {
     double u = ref.gm();
     return 2 * PI * std::sqrt(a*a*a / u);
 }
 
-double Orbit::MeanMotion() const {
+double Orbit::mean_motion() const {
     double u = ref.gm();
     return std::sqrt(u / (a*a*a));
 }
 
-double Orbit::EccentricAnomaly() const {
+double Orbit::time_since_periapsis() const {
+    return mean_anomaly() / mean_motion();
+}
+
+double Orbit::eccentric_anomaly() const {
     double E = acos((e + cos(t)) / (1 + e * cos(t)));
     if (t > PI && E < PI) {
         E = 2*PI - E;
@@ -34,8 +38,8 @@ double Orbit::EccentricAnomaly() const {
     return E;
 }
 
-double Orbit::MeanAnomaly() const {
-    double E = EccentricAnomaly();
+double Orbit::mean_anomaly() const {
+    double E = eccentric_anomaly();
     double M = E - e * sin(E);
     if (E > PI && M < PI) {
         M = 2*PI - M;
@@ -142,7 +146,7 @@ double Orbit::CalcEccentricAnomaly(const double mean_anomaly) const {
     double E = acos((e + cos(t)) / (1 + e * cos(t)));
     double M = E - e * sin(E);
 
-    // iterate to get M closer to meanAnomaly
+    // iterate to get M closer to mean_anomaly
     double rate = 0.01;
     bool lastDec = false;
     while(1) {
@@ -169,8 +173,8 @@ double Orbit::CalcEccentricAnomaly(const double mean_anomaly) const {
 }
 
 void Orbit::Step(const double time) {
-    double M = MeanAnomaly();
-    M += MeanMotion() * time;
+    double M = mean_anomaly();
+    M += mean_motion() * time;
 
     // apply corrections to mean anomaly
     while (M < -2 * PI) {

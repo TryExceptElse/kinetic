@@ -29,19 +29,20 @@ public:
 
     const Body& reference() const { return ref; }
     double semi_major_axis() const { return a; }
+    double periapsis() const { return a * (1.0 - e); }
+    double apoapsis() const { return e < 1 ? a * (1.0 + e) : -1.0; }
     double eccentricity() const { return e; }
     double inclination() const { return i; }
     double longitude_of_ascending_node() const { return l; }
     double argument_of_periapsis() const { return w; }
     double true_anomaly() const { return t; }
     double semiparameter() const { return a * (1 - e * e); }
-
-    double SemiMinorAxis() const;
-    double Period() const;
-    double EccentricAnomaly() const;
-    double MeanAnomaly() const;
-    double MeanMotion() const;
-    double TimeSincePeriapsis() const;
+    double semi_minor_axis() const;
+    double period() const;
+    double eccentric_anomaly() const;
+    double mean_anomaly() const;
+    double mean_motion() const;
+    double time_since_periapsis() const;
 
     Vector Position() const;
     Vector Velocity() const;

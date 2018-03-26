@@ -4,7 +4,6 @@ version '0.0.1'
 apply plugin: 'cpp'
 
 buildscript {
-    ext.clone_dir = 'build/clone'
     ext.third_party_dir = 'build/third_party'
     ext.test_dir = '../out/test/actor'
 }
@@ -22,15 +21,20 @@ model {
                     }
                 }
             }
+            binaries.withType(SharedLibraryBinary) { binary ->
+                buildable = false
+            }
         }
         testActor(NativeExecutableSpec) {
             sources {
                 cpp {
                     source {
                         srcDirs "test", 'third_party_test'
-                        cpp.lib library: "actor"
                     }
                 }
+            }
+            binaries.all {
+                lib library: 'actor', linkage: 'static'
             }
         }
     }
@@ -41,6 +45,13 @@ build.doLast {
     copy {
         includeEmptyDirs = false
         from new File("build/exe/testActor")
-        into "${test_dir}"
+        into test_dir
     }
+}
+
+task cleanTestDir(type: Delete) {
+}
+
+clean.doLast {
+    cleanTestDir
 }
