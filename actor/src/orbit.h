@@ -27,6 +27,8 @@ public:
         CalcFromPosVel(r, v);
     }
 
+    // getters
+
     const Body& reference() const { return ref; }
     double semi_major_axis() const { return a; }
     double periapsis() const { return a * (1.0 - e); }
@@ -55,6 +57,7 @@ public:
     double CalcEccentricAnomaly(const double meanAnomaly) const;
     void CalcTrueAnomaly(const double eccentricAnomaly);
     void Step(const double time);
+    Orbit predict(const double time) const;
 
 protected:
     double a, e, i, l, w, t;

@@ -177,19 +177,22 @@ void Orbit::Step(const double time) {
     M += mean_motion() * time;
 
     // apply corrections to mean anomaly
-    while (M < -2 * PI) {
-        M = M + 2 * PI;
-    }
+    M = std::fmod(M, TAU);
     if (M < 0) {
-        M = 2 * PI + M;
-    }
-    while (M > 2 * PI) {
-        M = M - 2 * PI;
+        M = TAU + M;
     }
 
     // calculate true anomaly
     const double E = CalcEccentricAnomaly(M);
     CalcTrueAnomaly(E);
+}
+
+Orbit Orbit::predict(const double time) const {
+    // Create copy of self and advance.
+    // Copy elision optimization should occur.
+    Orbit prediction = *this;
+    prediction.Step(time);
+    return prediction;
 }
 
 

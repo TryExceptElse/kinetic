@@ -35,6 +35,7 @@ model {
             }
             binaries.all {
                 lib library: 'actor', linkage: 'static'
+                cppCompiler.args '-g'
             }
         }
     }

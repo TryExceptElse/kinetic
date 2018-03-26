@@ -20,6 +20,7 @@ namespace kin {
 
 
 constexpr double PI = 3.1415926535897932384626433832795028841971;
+constexpr double TAU = PI * 2;
 constexpr double Em11 = 0.00000000001;
 constexpr double G = 6.67300 * Em11;
 constexpr double E24 = 1000000000000000000000000.0;
