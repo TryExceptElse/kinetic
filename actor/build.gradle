@@ -42,6 +42,7 @@ model {
 }
 
 build.doLast {
+    cppLint
     // copy built tests
     copy {
         includeEmptyDirs = false
@@ -49,6 +50,13 @@ build.doLast {
         into test_dir
     }
 }
+
+task cppLint(type:Exec) {
+    workingDir 'src'
+    commandLine 'python3'
+    args  '-m', 'cpplint', '--recursive', '--quiet', '.'
+}
+
 
 task cleanTestDir(type: Delete) {
 }

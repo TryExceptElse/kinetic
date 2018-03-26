@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef KINETIC_ACTOR_H_
-#define KINETIC_ACTOR_H_
+#ifndef ACTOR_SRC_ACTOR_H_
+#define ACTOR_SRC_ACTOR_H_
 
 #include <string>
 #include "path.h"
@@ -25,9 +25,9 @@ namespace kin {
 
 
 class Actor {
-public:
-    Actor(); // creates a new actor
-    Actor(const std::string& json);
+ public:
+    Actor();  // creates a new actor
+    explicit Actor(const std::string& json);
 
     const std::string& id() const { return id_; }
     Vector r() const { return r_; }
@@ -37,15 +37,15 @@ public:
     Vector world_position() const;
     Vector world_velocity() const;
     const FlightPath& path() const { return path_; }
-private:
+ private:
     std::string id_;
     std::string actor_type_;
-    Vector r_; // orbital position vector
-    Vector v_; // orbital velocity vector
+    Vector r_;  // orbital position vector
+    Vector v_;  // orbital velocity vector
     FlightPath path_;
 };
 
 
-}
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_ACTOR_H_

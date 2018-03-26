@@ -14,21 +14,20 @@
    limitations under the License.
 */
 
-#ifndef KINETIC_BODY_H_
-#define KINETIC_BODY_H_
+#ifndef ACTOR_SRC_BODY_H_
+#define ACTOR_SRC_BODY_H_
 
-#include "const.h"
+#include "./const.h"
 
 namespace kin {
 
 
-class Body
-{
-protected:
+class Body {
+ protected:
     const double GM_;
     const double r_;
 
-public:
+ public:
     Body(const double GM, const double r): GM_(GM), r_(r) {}
 
     double mass() const { return GM_ / G; }
@@ -37,6 +36,6 @@ public:
 };
 
 
-}
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_BODY_H_

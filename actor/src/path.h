@@ -14,23 +14,36 @@
    limitations under the License.
 */
 
-#ifndef KINETIC_STACK_H
-#define KINETIC_STACK_H
+#ifndef ACTOR_SRC_PATH_H_
+#define ACTOR_SRC_PATH_H_
 
-#include <vector>
+#include <map>
+#include "body.h"
+#include "vector.h"
 
 namespace kin {
 
 
+class Maneuver {
+ public:
+    Maneuver();
+ private:
+};
+
 /**
- * A FlightPath is a series of Burns and Trajectories, which taken
+ * A FlightPath is a series of Maneuvers and Trajectories, which taken
  * together allow the position and velocity at any time between t0 and
  * tf to be determined.
  */
 class FlightPath {
+ public:
+    FlightPath();
+    FlightPath(const Body &body, const Vector r, const Vector v);
+ private:
+    std::map<double, Maneuver> maneuvers_;
 };
 
 
-}
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_PATH_H_

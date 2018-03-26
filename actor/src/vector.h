@@ -14,17 +14,16 @@
     limitations under the License.
  */
 
-#ifndef KINETIC_VECTOR_H_
-#define KINETIC_VECTOR_H_
+#ifndef ACTOR_SRC_VECTOR_H_
+#define ACTOR_SRC_VECTOR_H_
 
 #include <cmath>
 
 namespace kin {
 
 
-class Vector
-{
-public:
+class Vector {
+ public:
     double x, y, z;
 
     Vector() : x(0), y(0), z(0) { }
@@ -38,11 +37,9 @@ public:
     }
 
     Vector Cross(const Vector other) const {
-        return Vector(
-            y * other.z - z * other.y,
-            z * other.x - x * other.z,
-            x * other.y - y * other.x
-        );
+        return Vector(y * other.z - z * other.y,
+                      z * other.x - x * other.z,
+                      x * other.y - y * other.x);
     }
 
     Vector operator* (const Vector other) const { return Cross(other); }
@@ -69,6 +66,6 @@ public:
 };
 
 
-} // namespace kin
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_VECTOR_H_

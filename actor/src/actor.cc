@@ -9,4 +9,4 @@ Actor::Actor(const std::string& json) {
 }
 
 
-} // namespace kin
+}  // namespace kin

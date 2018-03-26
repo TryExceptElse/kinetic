@@ -17,12 +17,12 @@ double Orbit::semi_minor_axis() const {
 }
 
 double Orbit::period() const {
-    const double u = ref.gm();
+    const double u = ref_.gm();
     return 2 * PI * std::sqrt(a*a*a / u);
 }
 
 double Orbit::mean_motion() const {
-    const double u = ref.gm();
+    const double u = ref_.gm();
     return std::sqrt(u / (a*a*a));
 }
 
@@ -56,7 +56,7 @@ Vector Orbit::position() const {
     r.x = p * (cos(l) * cos(w + t) - sin(l) * cos(i) * sin(w + t));
     r.y = p * (sin(l) * cos(w + t) + cos(l) * cos(i) * sin(w + t));
     r.z = p * sin(i) * sin(w + t);
-    return r - epoch;
+    return r - epoch_;
 }
 
 /**
@@ -64,7 +64,7 @@ Vector Orbit::position() const {
  */
 Vector Orbit::velocity() const {
     const double p = semiparameter();
-    const double u = ref.gm();
+    const double u = ref_.gm();
     Vector v;
     const double g = -sqrt(u/p);
     v.x = g * (cos(l)          * (sin(w + t) + e * sin(w)) +
@@ -79,9 +79,9 @@ Vector Orbit::velocity() const {
  * Calculates orbital elements from passed orbital vectors.
  */
 void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
-    const Vector h = r * v; // calculate specific relative angular moment
-    const Vector n(-h.y, h.x, 0); // calculate vector to the ascending node
-    const double u = ref.gm(); // standard gravity
+    const Vector h = r * v;        // calculate specific relative angular moment
+    const Vector n(-h.y, h.x, 0);  // calculate vector to the ascending node
+    const double u = ref_.gm();    // standard gravity
 
     // calculate eccentricity vector and scalar
     Vector e = ((v * h) * (1.0 / u)) - (r * (1.0 / r.len()));
@@ -117,8 +117,8 @@ void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
         this->t = 2 * PI - acos(e.Dot(r) / (e.len() * r.len()));
 
     // calculate epoch
-    this->epoch = Vector(0,0,0);
-    this->epoch = position() - r;
+    this->epoch_ = Vector(0, 0, 0);
+    this->epoch_ = position() - r;
 }
 
 /**
@@ -149,7 +149,7 @@ double Orbit::CalcEccentricAnomaly(const double mean_anomaly) const {
     // iterate to get M closer to mean_anomaly
     double rate = 0.01;
     bool lastDec = false;
-    while(1) {
+    while (1) {
         if (std::fabs(M - mean_anomaly) < 0.0000000000001) {
             break;
         }
@@ -196,4 +196,4 @@ Orbit Orbit::predict(const double time) const {
 }
 
 
-} // namespace kin
+}  // namespace kin

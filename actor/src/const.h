@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-#ifndef KINETIC_CONST_H_
-#define KINETIC_CONST_H_
+#ifndef ACTOR_SRC_CONST_H_
+#define ACTOR_SRC_CONST_H_
 
 namespace kin {
 
@@ -28,6 +28,6 @@ constexpr double E24m11 = 10000000000000.0;
 constexpr double km = 1000.0;
 
 
-}
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_CONST_H_

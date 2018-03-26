@@ -3,12 +3,12 @@
  * http://quantumg.blogspot.com/2010/07/coding-orbital-mechanics.html
  */
 
-#ifndef KINETIC_ORBIT_H_
-#define KINETIC_ORBIT_H_
+#ifndef ACTOR_SRC_ORBIT_H_
+#define ACTOR_SRC_ORBIT_H_
 
 #include <memory>
-#include "body.h"
-#include "vector.h"
+#include "./body.h"
+#include "./vector.h"
 
 namespace kin {
 
@@ -17,19 +17,18 @@ namespace kin {
 
 
 class Orbit {
-
-public:
+ public:
     Orbit(const Body &ref,
         double a, double e, double i, double l, double w, double t):
-        ref(ref), a(a), e(e), i(i), l(l), w(w), t(t) {}
+        ref_(ref), a(a), e(e), i(i), l(l), w(w), t(t) {}
 
-    Orbit(const Body &ref, Vector r, Vector v): ref(ref) {
+    Orbit(const Body &ref, const Vector r, const Vector v): ref_(ref) {
         CalcFromPosVel(r, v);
     }
 
     // getters
 
-    const Body& reference() const { return ref; }
+    const Body& reference() const { return ref_; }
     double semi_major_axis() const { return a; }
     double periapsis() const { return a * (1.0 - e); }
     double apoapsis() const { return e < 1 ? a * (1.0 + e) : -1.0; }
@@ -59,13 +58,13 @@ public:
     void Step(const double time);
     Orbit predict(const double time) const;
 
-protected:
+ protected:
     double a, e, i, l, w, t;
-    Vector epoch;
-    const Body &ref;
+    Vector epoch_;
+    const Body &ref_;
 };
 
 
-} // namespace kin
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_ORBIT_H_

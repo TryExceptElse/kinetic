@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef KINETIC_ACTOR_H_
-#define KINETIC_ACTOR_H_
+#ifndef ACTOR_SRC_UNI_H_
+#define ACTOR_SRC_UNI_H_
 
 #include <unordered_map>
 
@@ -23,11 +23,11 @@ namespace kin {
 
 
 class Universe {
-public:
-private:
+ public:
+ private:
 };
 
 
-}
+}  // namespace kin
 
-#endif // include guard
+#endif  // ACTOR_SRC_UNI_H_
