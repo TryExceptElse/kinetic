@@ -17,12 +17,12 @@ double Orbit::semi_minor_axis() const {
 }
 
 double Orbit::period() const {
-    double u = ref.gm();
+    const double u = ref.gm();
     return 2 * PI * std::sqrt(a*a*a / u);
 }
 
 double Orbit::mean_motion() const {
-    double u = ref.gm();
+    const double u = ref.gm();
     return std::sqrt(u / (a*a*a));
 }
 
@@ -88,7 +88,7 @@ void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
     this->e = e.len();
 
     // calculate specific orbital energy and semi-major axis
-    double E = v.sqlen() * 0.5 - u / r.len();
+    const double E = v.sqlen() * 0.5 - u / r.len();
     this->a = -u / (E * 2);
 
     // calculate inclination
@@ -137,7 +137,7 @@ void Orbit::CalcTrueAnomaly(const double eccentric_anomaly) {
 }
 
 double Orbit::EstimateTrueAnomaly(const double mean_anomaly) const {
-    double M = mean_anomaly;
+    const double M = mean_anomaly;
     return M + 2 * e * std::sin(M) + 1.25 * e * e * std::sin(2 * M);
 }
 
