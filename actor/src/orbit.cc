@@ -50,7 +50,7 @@ double Orbit::mean_anomaly() const {
 /**
  * Gets Current position vector in orbit.
  */
-Vector Orbit::Position() const {
+Vector Orbit::position() const {
     const double p = semiparameter();
     Vector r;
     r.x = p * (cos(l) * cos(w + t) - sin(l) * cos(i) * sin(w + t));
@@ -62,7 +62,7 @@ Vector Orbit::Position() const {
 /**
  * Gets Current velocity vector in orbit.
  */
-Vector Orbit::Velocity() const {
+Vector Orbit::velocity() const {
     const double p = semiparameter();
     const double u = ref.gm();
     Vector v;
@@ -71,7 +71,7 @@ Vector Orbit::Velocity() const {
                sin(l) * cos(i) * (cos(w + t) + e * cos(w)));
     v.y = g * (sin(l)          * (sin(w + t) + e * sin(w)) -
                cos(l) * cos(i) * (cos(w + t) + e * cos(w)));
-    v.z = g * (sin(i) * (cos(w + t) + e * cos(w)));
+    v.z = -g * (sin(i) * (cos(w + t) + e * cos(w)));
     return v;
 }
 
@@ -79,7 +79,7 @@ Vector Orbit::Velocity() const {
  * Calculates orbital elements from passed orbital vectors.
  */
 void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
-    const Vector h = r * v; // calculate specific relative angular momement
+    const Vector h = r * v; // calculate specific relative angular moment
     const Vector n(-h.y, h.x, 0); // calculate vector to the ascending node
     const double u = ref.gm(); // standard gravity
 
@@ -118,7 +118,7 @@ void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
 
     // calculate epoch
     this->epoch = Vector(0,0,0);
-    this->epoch = Position() - r;
+    this->epoch = position() - r;
 }
 
 /**

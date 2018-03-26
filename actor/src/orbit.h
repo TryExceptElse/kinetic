@@ -43,9 +43,8 @@ public:
     double mean_anomaly() const;
     double mean_motion() const;
     double time_since_periapsis() const;
-
-    Vector Position() const;
-    Vector Velocity() const;
+    Vector position() const;
+    Vector velocity() const;
 
     // vectors in geocentric equatorial inertial coordinates
     void CalcFromPosVel(const Vector r, const Vector v);
