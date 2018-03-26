@@ -10,6 +10,10 @@ future.
 
 ### Style:
 
-Note: This sub-project uses Google C++ style, with the notable
-exception of exceptions. Exceptions are to be used wherever they can
-reduce the quantity of code, and improve its readability
+Note: This sub-project uses 
+[Google C++ style](https://google.github.io/styleguide/cppguide.html), 
+with the notable exception of exceptions. (See 
+[Google's reasoning](
+https://google.github.io/styleguide/cppguide.html#Exceptions)) 
+Exceptions are to be used wherever they can reduce the quantity of code, and improve 
+its readability.
