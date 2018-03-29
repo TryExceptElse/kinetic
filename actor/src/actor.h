@@ -24,10 +24,18 @@
 namespace kin {
 
 
+// forward declare due to circular dependency
+class Universe;
+class System;
+
+
 class Actor {
  public:
-    Actor();  // creates a new actor
-    explicit Actor(const std::string& json);
+    Actor();
+    Actor(const Vector r, const Vector v);
+    explicit Actor(const std::string &json);
+    Actor(Universe *universe, const Vector r, const Vector v);
+    Actor(Universe *universe, const std::string &json);
 
     const std::string& id() const { return id_; }
     Vector r() const { return r_; }
@@ -36,14 +44,19 @@ class Actor {
     Vector local_velocity() const { return v_; }
     Vector world_position() const;
     Vector world_velocity() const;
-    const FlightPath& path() const { return path_; }
+    const FlightPath& path() const { return *path_; }
  private:
     std::string id_;
     std::string actor_type_;
     Vector r_;  // orbital position vector
     Vector v_;  // orbital velocity vector
-    FlightPath path_;
+    std::unique_ptr<FlightPath> path_;
+    Universe *universe_;
 };
+
+
+// alias of map storing actors by their id's
+using ActorMap = std::unordered_map<std::string, std::unique_ptr<Actor> >;
 
 
 }  // namespace kin

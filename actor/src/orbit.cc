@@ -11,18 +11,26 @@
 
 namespace kin {
 
+// Constructors -------------------------------------------------------
+
+Orbit::Orbit(const Body &ref,
+    double a, double e, double i, double l, double w, double t):
+    u(ref.gm()), a(a), e(e), i(i), l(l), w(w), t(t) {}
+
+Orbit::Orbit(const Body &ref, const Vector r, const Vector v):
+    Orbit(ref.gm(), r, v) {}
+
+// Getters ------------------------------------------------------------
 
 double Orbit::semi_minor_axis() const {
     return std::sqrt(a * a * (1 - e * e));
 }
 
 double Orbit::period() const {
-    const double u = ref_.gm();
     return 2 * PI * std::sqrt(a*a*a / u);
 }
 
 double Orbit::mean_motion() const {
-    const double u = ref_.gm();
     return std::sqrt(u / (a*a*a));
 }
 
@@ -64,7 +72,6 @@ Vector Orbit::position() const {
  */
 Vector Orbit::velocity() const {
     const double p = semiparameter();
-    const double u = ref_.gm();
     Vector v;
     const double g = -sqrt(u/p);
     v.x = g * (cos(l)          * (sin(w + t) + e * sin(w)) +
@@ -75,13 +82,14 @@ Vector Orbit::velocity() const {
     return v;
 }
 
+// Other Methods ------------------------------------------------------
+
 /**
  * Calculates orbital elements from passed orbital vectors.
  */
 void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
     const Vector h = r * v;        // calculate specific relative angular moment
     const Vector n(-h.y, h.x, 0);  // calculate vector to the ascending node
-    const double u = ref_.gm();    // standard gravity
 
     // calculate eccentricity vector and scalar
     Vector e = ((v * h) * (1.0 / u)) - (r * (1.0 / r.len()));
@@ -187,7 +195,7 @@ void Orbit::Step(const double time) {
     CalcTrueAnomaly(E);
 }
 
-Orbit Orbit::predict(const double time) const {
+Orbit Orbit::Predict(const double time) const {
     // Create copy of self and advance.
     // Copy elision optimization should occur.
     Orbit prediction = *this;

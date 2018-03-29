@@ -284,7 +284,7 @@ TEST_CASE( "test orbit prediction can be created", "[Orbit]" ) {
     const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
     const kin::Vector v(7320.0, 11329.0, -0211.0);
     const kin::Orbit orbit(body, r, v);
-    const kin::Orbit prediction = orbit.predict(orbit.period() / 4 * 3);
+    const kin::Orbit prediction = orbit.Predict(orbit.period() / 4 * 3);
 
     const kin::Vector position = prediction.position();
     const kin::Vector velocity = prediction.velocity();
@@ -301,7 +301,7 @@ TEST_CASE( "test orbit prediction does modify orbit", "[Orbit]" ) {
     const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
     const kin::Vector v(7320.0, 11329.0, -0211.0);
     const kin::Orbit orbit(body, r, v);
-    const kin::Orbit prediction = orbit.predict(orbit.period() / 4 * 3);
+    const kin::Orbit prediction = orbit.Predict(orbit.period() / 4 * 3);
 
     const kin::Vector position = orbit.position();
     const kin::Vector velocity = orbit.velocity();
@@ -318,10 +318,9 @@ TEST_CASE( "test multi-orbit prediction can be created", "[Orbit]" ) {
     const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
     const kin::Vector v(7320.0, 11329.0, -0211.0);
     const kin::Orbit orbit(body, r, v);
-    const kin::Orbit prediction = orbit.predict(orbit.period() * 5 / 2);
+    const kin::Orbit prediction = orbit.Predict(orbit.period() * 5 / 2);
 
     const kin::Vector position = prediction.position();
-    const kin::Vector velocity = prediction.velocity();
     REQUIRE( position.x == Approx(-712305324741.15112).epsilon(0.0001) );
     REQUIRE( position.y == Approx(365151451881.22858).epsilon(0.0001) );
     REQUIRE( position.z == Approx(14442203602.998617).epsilon(0.0001) );
@@ -332,7 +331,7 @@ TEST_CASE( "test multi-orbit un-prediction can be created", "[Orbit]" ) {
     const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
     const kin::Vector v(7320.0, 11329.0, -0211.0);
     const kin::Orbit orbit(body, r, v);
-    const kin::Orbit prediction = orbit.predict(orbit.period() * -5 / 2);
+    const kin::Orbit prediction = orbit.Predict(orbit.period() * -5 / 2);
 
     const kin::Vector position = prediction.position();
     const kin::Vector velocity = prediction.velocity();

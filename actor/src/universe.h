@@ -14,10 +14,11 @@
    limitations under the License.
 */
 
-#ifndef ACTOR_SRC_UNI_H_
-#define ACTOR_SRC_UNI_H_
+#ifndef ACTOR_SRC_UNIVERSE_H_
+#define ACTOR_SRC_UNIVERSE_H_
 
-#include <unordered_map>
+#include "system.h"
+#include "actor.h"
 
 namespace kin {
 
@@ -25,9 +26,11 @@ namespace kin {
 class Universe {
  public:
  private:
+    SystemMap systems_;
+    ActorMap actors_;
 };
 
 
 }  // namespace kin
 
-#endif  // ACTOR_SRC_UNI_H_
+#endif  // ACTOR_SRC_UNIVERSE_H_

@@ -12,27 +12,63 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
 */
 
 #ifndef ACTOR_SRC_BODY_H_
 #define ACTOR_SRC_BODY_H_
 
-#include "./const.h"
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include "const.h"
+#include "orbit.h"
+#include "vector.h"
 
 namespace kin {
+
+// forward declarations
+class Orbit;
+class Body;
+
+// alias map of bodies with their id's
+using BodyMap = std::unordered_map<std::string, std::unique_ptr<Body> >;
+using BodyIdPair = std::pair<const std::string, std::unique_ptr<Body> >;
 
 
 class Body {
  protected:
+    std::string id_;
+    std::unique_ptr<Orbit> orbit_;
+    Body *parent_;
+    BodyMap children_;
     const double GM_;
     const double r_;
 
  public:
-    Body(const double GM, const double r): GM_(GM), r_(r) {}
+    Body(const double GM, const double r);
+    Body(const double GM, const double r, std::unique_ptr<Orbit> orbit);
 
+    // methods
+
+    bool HasParent() const { return parent_ != nullptr; }
+    Orbit Predict(const double t) const;
+    Vector PredictLocalPosition(const double t) const;
+    Vector PredictSystemPosition(const double t) const;
+    Vector PredictLocalVelocity(const double t) const;
+    Vector PredictSystemVelocity(const double t) const;
+
+    // getters
+
+    const std::string& id() const { return id_; }
+    const Body* parent() const { return parent_; }
+    const Orbit* orbit() const { return orbit_.get(); }
     double mass() const { return GM_ / G; }
     double gm() const { return GM_; }
     double radius() const { return r_; }
+    /** Calculates radius of sphere of influence. Returns -1 if no parent */
+    double sphere_of_influence() const;
+    const BodyMap& children() const { return children_; }
 };
 
 

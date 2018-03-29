@@ -3,14 +3,39 @@
  * http://quantumg.blogspot.com/2010/07/coding-orbital-mechanics.html
  */
 
+// Glossary:
+// A number of variable names are used internally within this module
+// that are, or are adapted from commonly used annotations in physics.
+// These variable names are only intended to be used internally, such
+// as within methods or protected class fields. Public access occurs
+// using a more explicit name.
+// (For example: 'semi_major_axis()' accesses 'a')
+//
+// These names are only used within this file to represent the type of
+// value listed here, unless it is obvious from context what their
+// meaning is (for example: i as an index in an iterator).
+//
+// r : position vector
+// v : velocity vector
+// a : semi-major-axis
+// e : eccentricity
+// i : inclination
+// l : longitude of ascending node
+// w : argument of periapsis
+// t : true anomaly
+// u : standard gravitational parameter
+
 #ifndef ACTOR_SRC_ORBIT_H_
 #define ACTOR_SRC_ORBIT_H_
 
 #include <memory>
-#include "./body.h"
-#include "./vector.h"
+#include "body.h"
+#include "vector.h"
 
 namespace kin {
+
+// forward declarations
+class Body;
 
 
 // --------------------------------------------------------------------
@@ -19,16 +44,20 @@ namespace kin {
 class Orbit {
  public:
     Orbit(const Body &ref,
-        double a, double e, double i, double l, double w, double t):
-        ref_(ref), a(a), e(e), i(i), l(l), w(w), t(t) {}
+        double a, double e, double i, double l, double w, double t);
 
-    Orbit(const Body &ref, const Vector r, const Vector v): ref_(ref) {
+    Orbit(double u, double a, double e, double i, double l, double w, double t):
+        u(u), a(a), e(e), i(i), l(l), w(w), t(t) {}
+
+    Orbit(const Body &ref, const Vector r, const Vector v);
+
+    Orbit(double u, const Vector r, const Vector v): u(u) {
         CalcFromPosVel(r, v);
     }
 
     // getters
 
-    const Body& reference() const { return ref_; }
+    double gravitational_parameter() const { return u; }
     double semi_major_axis() const { return a; }
     double periapsis() const { return a * (1.0 - e); }
     double apoapsis() const { return e < 1 ? a * (1.0 + e) : -1.0; }
@@ -56,12 +85,11 @@ class Orbit {
     double CalcEccentricAnomaly(const double meanAnomaly) const;
     void CalcTrueAnomaly(const double eccentricAnomaly);
     void Step(const double time);
-    Orbit predict(const double time) const;
+    Orbit Predict(const double time) const;
 
  protected:
-    double a, e, i, l, w, t;
+    double u, a, e, i, l, w, t;
     Vector epoch_;
-    const Body &ref_;
 };
 
 

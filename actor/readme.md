@@ -16,3 +16,15 @@ with the notable exception of exceptions. (See [Google's reasoning](
 https://google.github.io/styleguide/cppguide.html#Exceptions))
 Exceptions are to be used wherever they can reduce the quantity of code,
 and improve its readability.
+
+#### Glossary:
+
+A number of variable names are used in this module that are, or are
+adapted from mathematical symbols in common use.
+
+Within this module, usage of these names to represent something other
+than what is listed here is avoided.
+
+* r : position vector
+* v : velocity vector
+* a : semi-major axis

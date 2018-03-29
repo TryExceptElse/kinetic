@@ -15,3 +15,21 @@
  */
 
 #include "path.h"
+
+namespace kin {
+
+
+FlightPath::FlightPath(
+    const System &system, const Vector r, const Vector v, double t):
+        system_(system), r0_(r), v0_(v), t0_(t) {}
+
+Orbit FlightPath::Predict(const double time) const {
+//    Body &primary_body()
+//    if (maneuvers_.size() == 0) {
+//        return
+//    }
+//    return
+}
+
+
+}  // namespace kin
