@@ -42,7 +42,7 @@ enum ManeuverType {
 
 class Maneuver {
  public:
-    Maneuver(const ManeuverType type, const Vector r0, const Vector p0);
+    Maneuver(const ManeuverType type, const Vector r0, const Vector v0);
 
     Vector r0() const { return r0_; }
     Vector v0() const { return v0_; }
@@ -52,7 +52,7 @@ class Maneuver {
  private:
     ManeuverType type_;  // type of maneuver
     Vector r0_;  // initial position relative to body
-    Vector p0_;  // initial velocity relative to body
+    Vector v0_;  // initial velocity relative to body
     double dv_;  // delta-V of maneuver
 };
 
@@ -84,9 +84,24 @@ class FlightPath {
     class Segment;
     class ManeuverSegment;
     class BallisticSegment;
+    class SegmentGroup;
+    class ManeuverSegmentGroup;
+    class BallisticSegmentGroup;
 
-    struct FlightPathCache;
-    struct InstantaneousStatus;
+    /**
+     * Used to store information that will be replaced when
+     * maneuvers or other information changes
+     */
+    struct FlightPathCache { // todo
+        FlightPathCache(): calc_t(0.0) {}
+
+        double calc_t;
+        // FlightPath maintains a FlightPathCache
+        // which in turn contains SegmentGroups associated with each
+        // burn or coast period
+        // which in turn contain path segments.
+        std::map<double, std::unique_ptr<SegmentGroup> > segments;
+    };
 
     // members
 
@@ -105,17 +120,6 @@ class FlightPath {
     /** Calculate path segments from current time until passed time t */
     void Calculate(const double time);
 
-    /**
-     * Calculate path from passed start time until end time,
-     * or maneuver changes.
-     * Returns -1.0 if no maneuver change occurred in time range,
-     * otherwise returns time at which maneuver status changed.
-     * Calculation ends.
-     * Helper method for Calculate().
-     */
-    InstantaneousStatus CalculateUntilManeuverChange(
-        const InstantaneousStatus start_status, const double end);
-
     /** Get iterator to passed time t */
     std::map<double, std::unique_ptr<Segment> >::iterator
             GetSegmentIterator(const double t) const;
@@ -132,30 +136,6 @@ class FlightPath {
     void CleanSegments();
 
     // Nested Classes -------------------------------------------------
-
-
-    struct FlightPathCache { // todo
-        FlightPathCache(): calc_t(0.0) {}
-
-        double calc_t;
-        std::map<double, std::unique_ptr<Segment> > segments;
-    }
-
-    /**
-     * Structure containing information about path at specified
-     * instant in time.
-     */
-    struct InstantaneousStatus { // todo
-        InstantaneousStatus(
-            double time, Maneuver *maneuver, Vector r, Vector v);
-
-        const double time;  // relative
-        const Maneuver * const maneuver;
-        const Vector r;
-        const Vector v;
-    }
-
-    // ----------------------------------------------------------------
 
     /**
      * A Segment stores information about a limited portion of a path
@@ -192,7 +172,7 @@ class FlightPath {
         const Vector r0_;
         const Vector v0_;
         double t0_;
-    }
+    };
 
     // ----------------------------------------------------------------
 
@@ -200,7 +180,7 @@ class FlightPath {
      public:
         ManeuverSegment(
             const System &system, const Vector r, const Vector v, double t);
-    }
+    };
 
     // ----------------------------------------------------------------
 
@@ -208,7 +188,52 @@ class FlightPath {
      public:
         BallisticSegment(
             const System &system, const Vector r, const Vector v, double t);
-    }
+    };
+
+    // ----------------------------------------------------------------
+
+    /**
+     * Grouping of Segments grouped by the maneuver that they take
+     * place during.
+     */
+    class SegmentGroup {
+     public:
+        SegmentGroup(const System &system, const Maneuver * const maneuver,
+            const Vector r, const Vector v, double t);
+
+        /** Gets Orbit object for passed time relative to universe t0. */
+        Orbit Predict(const double time) const;
+
+        // getters
+        const std::map<double, std::unique_ptr<Segment> >& segments() const;
+        Maneuver *maneuver();
+        Vector rf() const;
+        Vector vf() const;
+        double tf() const;
+
+     private:
+        const Maneuver * const maneuver_;
+        const System &system_;
+        std::map<double, std::unique_ptr<Segment> > segments_;
+    };
+
+    // ----------------------------------------------------------------
+
+    class ManeuverSegmentGroup {
+     public:
+        ManeuverSegmentGroup(const System &system,
+            const Maneuver * const maneuver,
+            const Vector r, const Vector v, double t);
+    };
+
+    // ----------------------------------------------------------------
+
+    class BallisticSegmentGroup {
+        BallisticSegmentGroup(const System &system,
+            const Vector r, const Vector v, double t);
+    };
+
+    // ----------------------------------------------------------------
 
 };
 

@@ -35,7 +35,7 @@ class System {
 
     /**
      * Find body in System which is the primary influence at
-     * passed positon vector.
+     * passed position vector.
      */
     const Body& FindPrimaryInfluence(const Vector r, double t) const;
     void AddActor(Actor *actor);

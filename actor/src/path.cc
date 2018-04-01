@@ -76,7 +76,7 @@ InstantaneousStatus FlightPath::CalculateUntilManeuverChange(
     const Maneuver *maneuver = FindManeuver(start);
     // get starting segment
     const Segment *segment = &GetSegment(calc_t);
-    // if maneuver started before maneuver
+    // if segment started before maneuver
     while (calc_t < time) {
         const double segment_end_t = segment->FindEnd(calc_t, time);
         if (segment_end_t == -1.0) {
