@@ -30,11 +30,11 @@ FlightPath::FlightPath(
     const System &system, const Vector r, const Vector v, double t):
         system_(system), r0_(r), v0_(v), t0_(t) {}
 
-Orbit FlightPath::Predict(const double time) const {
+Orbit FlightPath::Predict(const double time) {
     return GetSegment(time).Predict(time);
 }
 
-const Maneuver* FindManeuver(const double t) const {
+const Maneuver* FlightPath::FindManeuver(const double t) const {
     if (maneuvers_.size() == 0) {
         return nullptr;
     }
@@ -44,60 +44,51 @@ const Maneuver* FindManeuver(const double t) const {
         return nullptr;
     }
     // Get iterator of maneuver preceding or equal to time t
-    Maneuver &preceding_maneuver = std::prev(following_iterator)->second;
-    // If maneuver has ended by time t, return nullptr,
+    const Maneuver &preceding_maneuver = std::prev(following_iterator)->second;
+    // If maneuver has ended by or at time t, return nullptr,
     // otherwise ptr to maneuver.
     return preceding_maneuver.tf() <= t ? nullptr : &preceding_maneuver;
-}
-
-const Maneuver& NextManeuver(const double t) const {
 }
 
 
 // private methods
 
 
-void FlightPath::Calculate(const double time) {
+void FlightPath::Calculate(const double t) {
     // Calculates flight path until passed time, with time being
-    // relative to FlightPath t0.
-    if (time <= cache_.calc_t) {
-        return;  // No calculation needed.
-    }
-    // remove segments that are no longer needed.
-    CleanSegments();
-    // generate segments from current time until passed time t.
-    double calc_t = cache_.calc_t;  // latest calculated time
-}
+    // relative to System t0.
 
-InstantaneousStatus FlightPath::CalculateUntilManeuverChange(
-        const double start, const double end) {
-    // get maneuver at start time, then proceed until end time is
-    // reached, or maneuver changes.
-    const Maneuver *maneuver = FindManeuver(start);
-    // get starting segment
-    const Segment *segment = &GetSegment(calc_t);
-    // if segment started before maneuver
-    while (calc_t < time) {
-        const double segment_end_t = segment->FindEnd(calc_t, time);
-        if (segment_end_t == -1.0) {
-            // segment does not end in calculated time span.
-            cache_.calc_t = time;
-        } else {
-            // segment ends; create new segment and continue
-            const Orbit latest_orbit = segment->Predict(segment_end_t)
-            const Vector latest_r = orbit.position();
-            const Vector latest_v = orbit.velocity();
+    // If a previous SegmentGroup has been left uncompleted,
+    // finish it first.
+    if (cache_.status.incomplete_element) {
+        SegmentGroup *incomplete_group = last_group();
+        cache_.status = incomplete_group.Calculate(t);
+        // If time that calculation reached exceeds t,
+        // calculation is complete.
+        if (result.end_t > t) {
+            return
         }
     }
+    // Add new groups and Calculate() them until end_t extends past
+    // time t.
+    while (cache_.status.end_t <= t) {
+        // get maneuver (or non-maneuver) that new SegmentGroup will
+        // correspond with.
+        const Maneuver * const maneuver = FindManeuver(status.end_t);
+        SegmentGroup group;
+        const Vector r = cache_.status.r;
+        const Vector v = cache_.status.v;
+        const double group_t = cache_.status.end_t;
+        std::unique_ptr<SegmentGroup> group = (maneuver == nullptr) ?
+            std::make_unique<BallisticSegmentGroup>(system_, r, v, group_t) :
+            std::make_unique<ManeuverSegmentGroup>(
+                system_, maneuver, r, v, group_t);
+        cache_.status = group->Calculate(t);
+        cache_.groups[group_t] = std::move(group);
+    }
 }
 
-void FlightPath::CleanSegments() {
-    auto first_needed_iterator = GetSegmentIterator(current_time_);
-    cache_.segments.erase(cache_.segments.begin(), first_needed_iterator);
-}
-
-std::map<double, std::unique_ptr<Segment> >::iterator
-        FlightPath::GetSegmentIterator(const double t) const {
+const Segment& FlightPath::GetSegment(const double t) {
     // validate t
     if (t < t0_) {
         throw std::invalid_argument(
@@ -106,16 +97,103 @@ std::map<double, std::unique_ptr<Segment> >::iterator
     }
     // calculate segments for path until time t
     Calculate(t);
+    // Get segment group for time t.
+    SegmentGroup &group = std::prev(cache_.groups.upper_bound())->second;
     // Get segment immediately before, or starting at time t.
-    return std::prev(cache_.segments.upper_bound(t));
+    return group.GetSegment(t);
 }
 
-const Segment& FlightPath::GetSegment(const double t) const {
-    return *GetSegmentIterator(t);
+SegmentGroup* FlightPath::last_group() {
+    return cache_.groups.size() == 0 ?
+        nullptr : &cache_.groups.rbegin()->second;
 }
 
+CalculationStatus FlightPath::calculation_status() const {
+    if (cache_.status.end_t == -1.0) {
+        cache_.status.end_t = t0_;
+        cache_.status.r = r0_;
+        cache_.status.v = v0_;
+    }
+    return cache_.status;
+}
 
-// --------------------------------------------------------------------
+// FlightPath inner-classes -------------------------------------------
+
+// SegmentGroup -------------------------------------------------------
+
+FlightPath::SegmentGroup::SegmentGroup(
+        const System &system, const Maneuver * const maneuver,
+        const Vector r, const Vector v, double t):
+        system_(system), maneuver_(maneuver), r_(r), v_(v), t_(t) {
+    calculation_status_.r = r;
+    calculation_status_.v = v;
+    calculation_status_.end_t = t;
+}
+
+Orbit FlightPath::SegmentGroup::Predict(const double t) const {
+    return GetSegment(t).Predict(t);
+}
+
+const Segment& FlightPath::SegmentGroup::GetSegment(const double t) {
+    const auto following_iterator = segments_.upper_bound(t);
+    if (following_iterator == segments_.begin()) {
+        throw std::invalid_argument(
+            "FlightPath::SegmentGroup::GetSegment() : " +
+            "Passed time precedes first segment in SegmentGroup: " + t);
+    }
+    const auto iterator = std::prev(following_iterator);
+    return *iterator.second;
+}
+
+CalculationResult FlightPath::SegmentGroup::Calculate(const double t) {
+    if (t < calculation_status_.end_t) {
+        return calculation_status_;
+    }
+    // If the last segment has not finished being calculated,
+    // continue calculating it until time t is reached or segment ends.
+    if (calculation_status_.incomplete_element) {
+        Segment &last_segment = *segments_.rbegin()->second;
+        calculation_status_ = last_segment.Calculate(t);
+        if (calculation_status_.end_t > t) {
+            return calculation_status_;
+        }
+    }
+    // Progress calculation of flight path until time t is reached or
+    // SegmentGroup ends.
+    while (calculation_status_.end_t <= t) {
+        const Vector r = calculation_status_.r;
+        const Vector v = calculation_status_.v;
+        const double segment_time = calculation_status_.end_t;
+        std::unique_ptr<Segment> segment = CreateSegment(r, v, segment_time);
+        calculation_status_ = segment->Calculate(t);
+        segments_[segment_time] = std::move(segment);
+    }
+    return calculation_status_;
+}
+
+// ManeuverSegmentGroup -----------------------------------------------
+
+FlightPath::ManeuverSegmentGroup::ManeuverSegmentGroup(
+        const System &system,
+        const Maneuver * const maneuver,
+        const Vector r, const Vector v, double t):
+            SegmentGroup(system, maneuver, r, v, t) {}
+
+std::unique_ptr<Segment> FlightPath::ManeuverSegmentGroup::CreateSegment(
+        const Vector r, const Vector v, const double t) const {
+    // todo
+}
+
+// BallisticSegmentGroup ----------------------------------------------
+
+FlightPath::BallisticSegmentGroup::BallisticSegmentGroup(
+        const System &system, const Vector r, const Vector v, double t):
+            SegmentGroup(system, nullptr, r, v, t) {}
+
+std::unique_ptr<Segment> FlightPath::BallisticSegmentGroup::CreateSegment(
+        const Vector r, const Vector v, const double t) const {
+    return std::move(std::make_unique<BallisticSegment>(system_, r, v, t));
+}
 
 
 }  // namespace kin

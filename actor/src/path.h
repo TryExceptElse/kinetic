@@ -19,6 +19,7 @@
 
 #include <map>
 #include <memory>
+#include <pair>
 #include "vector.h"
 #include "orbit.h"
 
@@ -42,17 +43,13 @@ enum ManeuverType {
 
 class Maneuver {
  public:
-    Maneuver(const ManeuverType type, const Vector r0, const Vector v0);
+    Maneuver(const ManeuverType type, double dv);
 
-    Vector r0() const { return r0_; }
-    Vector v0() const { return v0_; }
     double dv() const { return dv_; }
     double tf() const;
 
  private:
     ManeuverType type_;  // type of maneuver
-    Vector r0_;  // initial position relative to body
-    Vector v0_;  // initial velocity relative to body
     double dv_;  // delta-V of maneuver
 };
 
@@ -70,13 +67,15 @@ class FlightPath {
     FlightPath(const System &system, const Vector r, const Vector v, double t);
 
     /** Gets Orbit object for passed point in time since t0 */
-    Orbit Predict(const double time) const;
+    Orbit Predict(const double time);
 
-    /** Gets pointer to maneuver at passed time or else nullptr */
+    /**
+     * Gets pointer to maneuver at passed time or else nullptr.
+     * Maneuver start time is inclusive, and end time is not.
+     * If maneuver A ends at time 5, and time 5 is passed as an
+     * argument, it will not be returned by this method.
+     */
     const Maneuver *FindManeuver(const double t) const;  // todo
-
-    /** Gets the next maneuver after passed time */
-    const Maneuver& NextManeuver(const double t) const;  // todo
 
  private:
     // forward declared nested classes  (declared in full below)
@@ -92,15 +91,24 @@ class FlightPath {
      * Used to store information that will be replaced when
      * maneuvers or other information changes
      */
-    struct FlightPathCache { // todo
-        FlightPathCache(): calc_t(0.0) {}
-
-        double calc_t;
+    struct FlightPathCache {
         // FlightPath maintains a FlightPathCache
         // which in turn contains SegmentGroups associated with each
         // burn or coast period
         // which in turn contain path segments.
-        std::map<double, std::unique_ptr<SegmentGroup> > segments;
+        std::map<double, std::unique_ptr<SegmentGroup> > groups;
+        // stores result of last path calculation
+        CalculationStatus status;
+    };
+
+    /** Used to return results of flight path calculation */
+    struct CalculationStatus {
+        CalculationStatus(): end_t(-1.0), incomplete_element(false) {}
+
+        double end_t;  // Time at which evaluation of segment ended.
+        Vector r;      // Final position of calculation segment.
+        Vector v;      // Final velocity of calculation segment.
+        bool incomplete_element;  // last element calculated was unfinished.
     };
 
     // members
@@ -113,27 +121,28 @@ class FlightPath {
     const Vector r0_;  // position relative to system origin
     const Vector v0_;  // velocity relative to system
     const double t0_;  // start time of flight path relative to system
-    double current_time_;  // time relative to universe t0
-    bool cache_initialized_;
     FlightPathCache cache_;
 
-    /** Calculate path segments from current time until passed time t */
-    void Calculate(const double time);
-
-    /** Get iterator to passed time t */
-    std::map<double, std::unique_ptr<Segment> >::iterator
-            GetSegmentIterator(const double t) const;
-
-    /** Get Segment of orbit which describes position at time t */
-    const Segment& GetSegment(const double t) const;
-
-    /** Gets current maneuver if one exists
+    /**
+     * Calculate path segments from current time until passed time t.
+     * time range is inclusive; Ie: Path information at time t should
+     * be able to be retrieved after Calculate(t) is called.
+     */
+    void Calculate(const double t);
 
     /**
-     * Removes segments from cache_ that precede current time and
-     * are unused.
+     * Get Segment of orbit which describes position at time t.
+     * This method is not constant because it may have to calculate
+     * additional orbital segments before it can return the
+     * desired Segment.
      */
-    void CleanSegments();
+    const Segment& GetSegment(const double t);
+
+    // private getters
+
+    /** Gets last group in cache */
+    SegmentGroup* last_group();
+    CalculationStatus calculation_status() const;
 
     // Nested Classes -------------------------------------------------
 
@@ -158,15 +167,12 @@ class FlightPath {
          * Predicts orbital trajectory at passed time.
          * time is relative to universe t0.
          */
-        virtual Orbit Predict(const double t);
+        virtual Orbit Predict(const double t) const;
 
         /**
-         * Attempts to find the end of this segment between start_t and
-         * end_t, inclusive.
-         * Returns time at which segment ends, or -1.0 if end was
-         * not found.
+         * Calculates flight path until passed time t or Segment ends.
          */
-        virtual double FindEnd(const double start_t, const double end_t);
+        virtual CalculationStatus Calculate(const double t);
      private:
         const System &system_;
         const Vector r0_;
@@ -202,19 +208,38 @@ class FlightPath {
             const Vector r, const Vector v, double t);
 
         /** Gets Orbit object for passed time relative to universe t0. */
-        Orbit Predict(const double time) const;
+        Orbit Predict(const double t) const;
+
+        /** Gets segment that includes passed time t. */
+        const Segment& GetSegment(const double t);
+
+        /**
+         * Calculates flightpath until passed time t relative to
+         * system t0.
+         */
+        CalculationResult Calculate(const double t);
 
         // getters
-        const std::map<double, std::unique_ptr<Segment> >& segments() const;
-        Maneuver *maneuver();
-        Vector rf() const;
-        Vector vf() const;
-        double tf() const;
+        const std::map<double, std::unique_ptr<Segment> >& segments() const {
+            return segments_;
+        }
+        const Maneuver * const maneuver() const { return maneuver_; }
 
      private:
-        const Maneuver * const maneuver_;
         const System &system_;
+        const Maneuver * const maneuver_;
+        const Vector r_;
+        const Vector v_;
+        const Vector t_;
         std::map<double, std::unique_ptr<Segment> > segments_;
+        double calculation_status_;
+
+        /**
+         * Constructs new segment to be added to group.
+         * Intended to be called within Calculate().
+         */
+        virtual std::unique_ptr<Segment> CreateSegment(
+                const Vector r, const Vector v, const double t) const;
     };
 
     // ----------------------------------------------------------------
@@ -229,6 +254,7 @@ class FlightPath {
     // ----------------------------------------------------------------
 
     class BallisticSegmentGroup {
+     public:
         BallisticSegmentGroup(const System &system,
             const Vector r, const Vector v, double t);
     };

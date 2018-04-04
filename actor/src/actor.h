@@ -48,8 +48,6 @@ class Actor {
  private:
     std::string id_;
     std::string actor_type_;
-    Vector r_;  // orbital position vector
-    Vector v_;  // orbital velocity vector
     std::unique_ptr<FlightPath> path_;
     Universe *universe_;
 };
