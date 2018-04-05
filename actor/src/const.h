@@ -26,6 +26,7 @@ constexpr double G = 6.67300 * Em11;
 constexpr double E24 = 1000000000000000000000000.0;
 constexpr double E24m11 = 10000000000000.0;
 constexpr double km = 1000.0;
+constexpr double e = 2.71828182845904523536;
 
 
 }  // namespace kin

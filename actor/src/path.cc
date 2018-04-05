@@ -25,7 +25,24 @@ static constexpr double kMaxMassRatioChangePerStep = 0.001;
 // Maneuver methods ---------------------------------------------------
 
 
+Maneuver::Maneuver(ManeuverType type,
+                   double dv,
+                   const PerformanceData performance,
+                   double m0,
+                   double t0):
+        type_(type), dv_(dv), performance_(performance), m0_(m0), t0_(t0) {}
 
+double Maneuver::mass_fraction() const {
+    return 1 - std::pow(e, -dv_ / performance_.ve());
+}
+
+double Maneuver::duration() const {
+    return mass_fraction() / performance_.flow_rate();
+}
+
+double Maneuver::expended_mass() const {
+    return m0_ * mass_fraction();
+}
 
 
 // FlightPath methods -------------------------------------------------
@@ -52,7 +69,7 @@ const Maneuver* FlightPath::FindManeuver(const double t) const {
     const Maneuver &preceding_maneuver = std::prev(following_iterator)->second;
     // If maneuver has ended by or at time t, return nullptr,
     // otherwise ptr to maneuver.
-    return preceding_maneuver.tf() <= t ? nullptr : &preceding_maneuver;
+    return preceding_maneuver.t1() <= t ? nullptr : &preceding_maneuver;
 }
 
 

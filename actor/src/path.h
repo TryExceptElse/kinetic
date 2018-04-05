@@ -36,21 +36,51 @@ enum ManeuverType {
     kPrograde, kRetrograde, kNormal, kAntiNormal, kRadial, kAntiRadial, kFixed
 };
 
+/**
+ * Structure containing information about propellant state at an
+ * arbitrary time.
+ */
+class PerformanceData {
+ public:
+    PerformanceData(double ve, double thrust): ve_(ve), thrust_(thrust) {}
+
+    double ve() const { return ve_; }
+    double thrust() const { return thrust_; }
+    double flow_rate() const { return thrust_ / ve_; }
+
+ private:
+    double ve_;
+    double thrust_;
+};
+
 
 // --------------------------------------------------------------------
 
-
+// https://en.wikipedia.org/wiki/Tsiolkovsky_rocket_equation
 class Maneuver {
  public:
-    Maneuver(const ManeuverType type, double dv);
+    Maneuver(ManeuverType type,
+             double dv,
+             const PerformanceData data,
+             double m0,
+             double t0);
 
     ManeuverType type() const { return type_; }
     double dv() const { return dv_; }
-    double tf() const;
+    double m0() const { return m0_; }
+    double m1() const { return m0_ - expended_mass(); }
+    double t0() const { return t0_; }
+    double t1() const { return t0_ + duration(); }  // end time of maneuver.
+    double duration() const;
+    double mass_fraction() const;  // mass ratio 0-1 which is expended.
+    double expended_mass() const;  // propellant mass expended.
 
  private:
     ManeuverType type_;  // type of maneuver
     double dv_;  // delta-V of maneuver
+    PerformanceData performance_;
+    double m0_;
+    double t0_;
 };
 
 
@@ -75,7 +105,7 @@ class FlightPath {
      * If maneuver A ends at time 5, and time 5 is passed as an
      * argument, it will not be returned by this method.
      */
-    const Maneuver *FindManeuver(const double t) const;  // todo
+    const Maneuver *FindManeuver(const double t) const;
 
  private:
     // forward declared nested classes  (declared in full below)
