@@ -10,4 +10,4 @@ cdef extern from "actor.h" namespace "kin" nogil:
 
 
 cdef class PyActor:
-    cdef shared_ptr[Actor] _actor
+    cdef shared_ptr[Actor] _actor  # todo: replace shared_ptr

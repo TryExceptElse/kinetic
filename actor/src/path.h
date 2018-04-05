@@ -19,7 +19,6 @@
 
 #include <map>
 #include <memory>
-#include <pair>
 #include "vector.h"
 #include "orbit.h"
 
@@ -45,6 +44,7 @@ class Maneuver {
  public:
     Maneuver(const ManeuverType type, double dv);
 
+    ManeuverType type() const { return type_; }
     double dv() const { return dv_; }
     double tf() const;
 
@@ -67,7 +67,7 @@ class FlightPath {
     FlightPath(const System &system, const Vector r, const Vector v, double t);
 
     /** Gets Orbit object for passed point in time since t0 */
-    Orbit Predict(const double time);
+    Orbit Predict(const double time) const;
 
     /**
      * Gets pointer to maneuver at passed time or else nullptr.
@@ -87,6 +87,16 @@ class FlightPath {
     class ManeuverSegmentGroup;
     class BallisticSegmentGroup;
 
+    /** Used to return results of flight path calculation */
+    struct CalculationStatus {
+        CalculationStatus(): end_t(-1.0), incomplete_element(false) {}
+
+        double end_t;  // Time at which evaluation of segment ended.
+        Vector r;      // Final position of calculation segment.
+        Vector v;      // Final velocity of calculation segment.
+        bool incomplete_element;  // last element calculated was unfinished.
+    };
+
     /**
      * Used to store information that will be replaced when
      * maneuvers or other information changes
@@ -101,16 +111,6 @@ class FlightPath {
         CalculationStatus status;
     };
 
-    /** Used to return results of flight path calculation */
-    struct CalculationStatus {
-        CalculationStatus(): end_t(-1.0), incomplete_element(false) {}
-
-        double end_t;  // Time at which evaluation of segment ended.
-        Vector r;      // Final position of calculation segment.
-        Vector v;      // Final velocity of calculation segment.
-        bool incomplete_element;  // last element calculated was unfinished.
-    };
-
     // members
 
     std::map<double, Maneuver> maneuvers_;
@@ -121,14 +121,14 @@ class FlightPath {
     const Vector r0_;  // position relative to system origin
     const Vector v0_;  // velocity relative to system
     const double t0_;  // start time of flight path relative to system
-    FlightPathCache cache_;
+    mutable FlightPathCache cache_;
 
     /**
      * Calculate path segments from current time until passed time t.
      * time range is inclusive; Ie: Path information at time t should
      * be able to be retrieved after Calculate(t) is called.
      */
-    void Calculate(const double t);
+    void Calculate(const double t) const;
 
     /**
      * Get Segment of orbit which describes position at time t.
@@ -136,12 +136,12 @@ class FlightPath {
      * additional orbital segments before it can return the
      * desired Segment.
      */
-    const Segment& GetSegment(const double t);
+    const Segment& GetSegment(const double t) const;
 
     // private getters
 
     /** Gets last group in cache */
-    SegmentGroup* last_group();
+    SegmentGroup* last_group() const;
     CalculationStatus calculation_status() const;
 
     // Nested Classes -------------------------------------------------
@@ -173,7 +173,7 @@ class FlightPath {
          * Calculates flight path until passed time t or Segment ends.
          */
         virtual CalculationStatus Calculate(const double t);
-     private:
+     protected:
         const System &system_;
         const Vector r0_;
         const Vector v0_;
@@ -211,13 +211,13 @@ class FlightPath {
         Orbit Predict(const double t) const;
 
         /** Gets segment that includes passed time t. */
-        const Segment& GetSegment(const double t);
+        const Segment& GetSegment(const double t) const;
 
         /**
          * Calculates flightpath until passed time t relative to
          * system t0.
          */
-        CalculationResult Calculate(const double t);
+        CalculationStatus Calculate(const double t);
 
         // getters
         const std::map<double, std::unique_ptr<Segment> >& segments() const {
@@ -225,38 +225,52 @@ class FlightPath {
         }
         const Maneuver * const maneuver() const { return maneuver_; }
 
-     private:
+     protected:
         const System &system_;
         const Maneuver * const maneuver_;
         const Vector r_;
         const Vector v_;
-        const Vector t_;
+        const double t_;
         std::map<double, std::unique_ptr<Segment> > segments_;
-        double calculation_status_;
+        CalculationStatus calculation_status_;
 
         /**
          * Constructs new segment to be added to group.
          * Intended to be called within Calculate().
          */
         virtual std::unique_ptr<Segment> CreateSegment(
+                const Vector r, const Vector v, const double t) const = 0;
+    };
+
+    // ----------------------------------------------------------------
+
+    class ManeuverSegmentGroup: public SegmentGroup {
+     public:
+        ManeuverSegmentGroup(const System &system,
+            const Maneuver * const maneuver,
+            const Vector r, const Vector v, double t);
+
+        /**
+         * Constructs new segment to be added to group.
+         * Intended to be called within Calculate().
+         */
+        std::unique_ptr<Segment> CreateSegment(
                 const Vector r, const Vector v, const double t) const;
     };
 
     // ----------------------------------------------------------------
 
-    class ManeuverSegmentGroup {
-     public:
-        ManeuverSegmentGroup(const System &system,
-            const Maneuver * const maneuver,
-            const Vector r, const Vector v, double t);
-    };
-
-    // ----------------------------------------------------------------
-
-    class BallisticSegmentGroup {
+    class BallisticSegmentGroup: public SegmentGroup {
      public:
         BallisticSegmentGroup(const System &system,
             const Vector r, const Vector v, double t);
+
+        /**
+         * Constructs new segment to be added to group.
+         * Intended to be called within Calculate().
+         */
+        std::unique_ptr<Segment> CreateSegment(
+                const Vector r, const Vector v, const double t) const;
     };
 
     // ----------------------------------------------------------------

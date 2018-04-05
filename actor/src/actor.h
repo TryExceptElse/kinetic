@@ -38,10 +38,8 @@ class Actor {
     Actor(Universe *universe, const std::string &json);
 
     const std::string& id() const { return id_; }
-    Vector r() const { return r_; }
-    Vector v() const { return v_; }
-    Vector local_position() const { return r_; }
-    Vector local_velocity() const { return v_; }
+    Vector local_position() const;
+    Vector local_velocity() const;
     Vector world_position() const;
     Vector world_velocity() const;
     const FlightPath& path() const { return *path_; }
