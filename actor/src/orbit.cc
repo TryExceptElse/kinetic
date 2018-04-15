@@ -38,6 +38,18 @@ double Orbit::time_since_periapsis() const {
     return mean_anomaly() / mean_motion();
 }
 
+double Orbit::min_speed() const {
+    if (e >= 1) {
+        throw std::invalid_argument(
+            "Orbit::min_speed() : No minimum speed for orbits with e >= 1");
+    }
+    return SpeedAtDistance(apoapsis());
+}
+
+double Orbit::max_speed() const {
+    return SpeedAtDistance(periapsis());
+}
+
 double Orbit::eccentric_anomaly() const {
     double E = acos((e + cos(t)) / (1 + e * cos(t)));
     if (t > PI && E < PI) {
@@ -178,6 +190,10 @@ double Orbit::CalcEccentricAnomaly(const double mean_anomaly) const {
     }
 
     return E;
+}
+
+double Orbit::SpeedAtDistance(const double distance) const {
+    return std::sqrt(u * (2 / distance - 1 / a));
 }
 
 void Orbit::Step(const double time) {

@@ -73,6 +73,8 @@ class Orbit {
     double mean_anomaly() const;
     double mean_motion() const;
     double time_since_periapsis() const;
+    double min_speed() const;
+    double max_speed() const;
     Vector position() const;
     Vector velocity() const;
 
@@ -83,6 +85,7 @@ class Orbit {
     // obtained by the following formula (the error is of the order e^3)
     double EstimateTrueAnomaly(const double meanAnomaly) const;
     double CalcEccentricAnomaly(const double meanAnomaly) const;
+    double SpeedAtDistance(const double distance) const;
     void CalcTrueAnomaly(const double eccentricAnomaly);
     void Step(const double time);
     Orbit Predict(const double time) const;

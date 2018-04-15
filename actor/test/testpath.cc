@@ -17,9 +17,9 @@ TEST_CASE( "test path with no maneuvers can be calculated", "[Path]" ) {
     const kin::Vector v(7320.0, 11329.0, -0211.0);
     const kin::FlightPath path(system, r, v, 0);
     // predict orbit of 1/2 period from t0.
-    const kin::Orbit prediction = path.Predict(374942509.78053558 / 2);
+    const kin::KinematicData prediction = path.Predict(374942509.78053558 / 2);
 
-    const kin::Vector position = prediction.position();
+    const kin::Vector position = prediction.r;
     REQUIRE( position.x == Approx(-712305324741.15112).epsilon(0.0001) );
     REQUIRE( position.y == Approx(365151451881.22858).epsilon(0.0001) );
     REQUIRE( position.z == Approx(14442203602.998617).epsilon(0.0001) );

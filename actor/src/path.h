@@ -37,6 +37,14 @@ enum ManeuverType {
 };
 
 /**
+ * Structure containing kinematic information about an object
+ */
+struct KinematicData {
+    Vector r;
+    Vector v;
+};
+
+/**
  * Structure containing information about propellant state at an
  * arbitrary time.
  */
@@ -75,6 +83,8 @@ class Maneuver {
     double mass_fraction() const;  // mass ratio 0-1 which is expended.
     double expended_mass() const;  // propellant mass expended.
 
+    double FindMassAtTime(const double t) const;
+
  private:
     ManeuverType type_;  // type of maneuver
     double dv_;  // delta-V of maneuver
@@ -97,7 +107,7 @@ class FlightPath {
     FlightPath(const System &system, const Vector r, const Vector v, double t);
 
     /** Gets Orbit object for passed point in time since t0 */
-    Orbit Predict(const double time) const;
+    KinematicData Predict(const double time) const;
 
     /**
      * Gets pointer to maneuver at passed time or else nullptr.
@@ -180,6 +190,10 @@ class FlightPath {
      * A Segment stores information about a limited portion of a path
      * for which a non-iterative method of finding position and
      * velocity exists.
+     *
+     * Each segment has only a single primary influence, and so a
+     * Segment must end when it moves into a different primary sphere
+     * of influence.
      */
     class Segment {  // todo
      public:
@@ -196,18 +210,23 @@ class FlightPath {
         /**
          * Predicts orbital trajectory at passed time.
          * time is relative to universe t0.
+         *
+         * Returned KinematicData is relative to system.
          */
-        virtual Orbit Predict(const double t) const;
+        virtual KinematicData Predict(const double t) const = 0;
 
         /**
          * Calculates flight path until passed time t or Segment ends.
          */
-        virtual CalculationStatus Calculate(const double t);
+        virtual CalculationStatus Calculate(const double t) const = 0;
+
      protected:
         const System &system_;
+        const Body &primary_body_;
         const Vector r0_;
         const Vector v0_;
-        double t0_;
+        const double t0_;
+        mutable CalculationStatus calculation_status_;
     };
 
     // ----------------------------------------------------------------
@@ -215,7 +234,17 @@ class FlightPath {
     class ManeuverSegment: public Segment {
      public:
         ManeuverSegment(
-            const System &system, const Vector r, const Vector v, double t);
+            const System &system,
+            const Maneuver &maneuver,
+            const Vector r,
+            const Vector v,
+            double t);
+
+        KinematicData Predict(const double t) const;
+        CalculationStatus Calculate(const double t) const;
+     private:
+        const Maneuver &maneuver_;
+        const double m0_;
     };
 
     // ----------------------------------------------------------------
@@ -223,7 +252,16 @@ class FlightPath {
     class BallisticSegment: public Segment {
      public:
         BallisticSegment(
-            const System &system, const Vector r, const Vector v, double t);
+            const System &system,
+            const Vector r,
+            const Vector v,
+            double t);
+
+        KinematicData Predict(const double t) const;
+        CalculationStatus Calculate(const double t) const;
+     private:
+        Orbit orbit_;
+        bool calculation_complete_;
     };
 
     // ----------------------------------------------------------------
@@ -238,7 +276,7 @@ class FlightPath {
             const Vector r, const Vector v, double t);
 
         /** Gets Orbit object for passed time relative to universe t0. */
-        Orbit Predict(const double t) const;
+        KinematicData Predict(const double t) const;
 
         /** Gets segment that includes passed time t. */
         const Segment& GetSegment(const double t) const;
@@ -304,7 +342,6 @@ class FlightPath {
     };
 
     // ----------------------------------------------------------------
-
 };
 
 
