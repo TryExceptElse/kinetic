@@ -2,14 +2,22 @@
 
 #include <stdexcept>
 #include <cmath>
+#include "sole.hpp"
 
 namespace kin {
 
 
-Body::Body(const double GM, const double r): GM_(GM), r_(r) {}
+Body::Body(const double GM, const double r): Body(sole::uuid4().str(), GM, r) {}
 
 Body::Body(const double GM, const double r, std::unique_ptr<Orbit> orbit):
-        Body(GM, r) {
+        Body(sole::uuid4().str(), GM, r) {}
+
+Body::Body(const std::string id, const double GM, const double r):
+        GM_(GM), r_(r), id_(id) {}
+
+Body::Body(const std::string id, const double GM, const double r,
+    std::unique_ptr<Orbit> orbit):
+        Body(id, GM, r) {
     orbit_ = std::move(orbit);
 }
 

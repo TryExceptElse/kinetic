@@ -17,7 +17,7 @@ model {
                         srcDirs "src", "third_party"
                     }
                     exportedHeaders {
-                        srcDirs "src"
+                        srcDirs "src", "third_party"
                     }
                 }
             }
@@ -35,7 +35,7 @@ model {
             }
             binaries.all {
                 lib library: 'actor', linkage: 'static'
-                cppCompiler.args '-g'
+                cppCompiler.args '-O1', '-g'
             }
         }
     }

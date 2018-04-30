@@ -150,8 +150,8 @@ class InputHandler(private val container: Element) {
                 "el.requestPointerLock = " +
                 "el.requestPointerLock || " +
                 "el.mozRequestPointerLock || " +
-                "el.webkitRequestPointerLock;")
-        js("el.requestPointerLock()")
+                "el.webkitRequestPointerLock;")  // get lock method
+        js("el.requestPointerLock()") // call lock method
     }
 
     @Suppress("UNUSED_PARAMETER")

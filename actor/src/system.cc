@@ -21,7 +21,9 @@
 namespace kin {
 
 
-System::System(std::unique_ptr<Body> root): root_(std::move(root)) {}
+System::System(std::unique_ptr<Body> root): root_(std::move(root)) {
+    universe_ = nullptr;
+}
 
 /**
  * Gets primary influence on passed point at passed time.

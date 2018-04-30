@@ -48,6 +48,9 @@ class Body {
  public:
     Body(const double GM, const double r);
     Body(const double GM, const double r, std::unique_ptr<Orbit> orbit);
+    Body(const std::string id, const double GM, const double r);
+    Body(const std::string id, const double GM, const double r,
+         std::unique_ptr<Orbit> orbit);
 
     // methods
 

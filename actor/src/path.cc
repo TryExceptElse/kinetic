@@ -199,6 +199,11 @@ KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
 
 FlightPath::CalculationStatus
         FlightPath::ManeuverSegment::Calculate(const double t) const {
+    if (t < calculation_status_.end_t) {
+        return calculation_status_;
+    }
+    // Attempt to determine when segment ends.
+    throw std::runtime_error(""); // PLACEHOLDER
 }
 
 // BallisticSegment ---------------------------------------------------
@@ -245,8 +250,8 @@ FlightPath::CalculationStatus
         calculation_status_ = status;
         return calculation_status_;
     }
-    // create array of bodies in sphere of influence,
-    // and their max speed
+    // Create array of bodies in sphere of influence,
+    // and their max speed.
     // These bodies, which share the same parent as the segment, are
     // referred to here as peers.
     const double maxStepDuration =
@@ -293,7 +298,7 @@ FlightPath::CalculationStatus
                 // achilles logic.
                 if (step_duration < kMinBallisticStepDuration) {
                     step_duration = kMinBallisticStepDuration;
-                    break;  // There is no point in finding a closer body.
+                    break;  // There is no point in finding a closer peer body.
                 }
             }
         }
@@ -326,12 +331,6 @@ FlightPath::SegmentGroup::SegmentGroup(
         const System &system, const Maneuver * const maneuver,
         const Vector r, const Vector v, double t):
         system_(system), maneuver_(maneuver), r_(r), v_(v), t_(t) {
-    // validate input
-    if (maneuver->t0() != t) {
-        throw std::invalid_argument(
-            "t: " + std::to_string(t) + " does not match maneuver t0: " +
-            std::to_string(t));
-    }
     calculation_status_.r = r;
     calculation_status_.v = v;
     calculation_status_.end_t = t;
@@ -376,6 +375,11 @@ FlightPath::CalculationStatus
         const double segment_time = calculation_status_.end_t;
         std::unique_ptr<Segment> segment = CreateSegment(r, v, segment_time);
         calculation_status_ = segment->Calculate(t);
+        // Check to prevent infinite loops. An error is preferable.
+        if (calculation_status_.end_t <= segment_time) {
+            throw std::runtime_error("SegmentGroup::Calculate() : "
+                "Calculation of segment did not result in later end-time");
+        }
         segments_[segment_time] = std::move(segment);
     }
     return calculation_status_;
@@ -387,7 +391,14 @@ FlightPath::ManeuverSegmentGroup::ManeuverSegmentGroup(
         const System &system,
         const Maneuver * const maneuver,
         const Vector r, const Vector v, double t):
-            SegmentGroup(system, maneuver, r, v, t) {}
+            SegmentGroup(system, maneuver, r, v, t) {
+    // validate input
+    if (maneuver->t0() != t) {
+        throw std::invalid_argument(
+            "t: " + std::to_string(t) + " does not match maneuver t0: " +
+            std::to_string(t));
+    }
+}
 
 std::unique_ptr<FlightPath::Segment>
         FlightPath::ManeuverSegmentGroup::CreateSegment(

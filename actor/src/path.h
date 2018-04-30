@@ -340,7 +340,6 @@ class FlightPath {
         std::unique_ptr<Segment> CreateSegment(
                 const Vector r, const Vector v, const double t) const;
     };
-
     // ----------------------------------------------------------------
 };
 
