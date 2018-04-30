@@ -32,6 +32,7 @@ class Universe;
 class System {
  public:
     explicit System(std::unique_ptr<Body> root);
+    System(std::string id, std::unique_ptr<Body> root);
 
     /**
      * Find body in System which is the primary influence at
@@ -43,7 +44,9 @@ class System {
     // getters
     Vector v() const { return v_; }
     const Body& root() const { return *root_; }
+    const std::string id() const { return id_; }
  private:
+    std::string id_;
     Universe *universe_;  // reference back to parent universe
     std::unique_ptr<Body> root_;  // root body object - others may have weak ptr
     Vector v_;  // system velocity relative to the avg of the stellar medium.

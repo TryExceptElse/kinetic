@@ -17,11 +17,17 @@
 #include "system.h"
 
 #include <utility>
+#include "sole.hpp"
 
 namespace kin {
 
 
-System::System(std::unique_ptr<Body> root): root_(std::move(root)) {
+System::System(std::unique_ptr<Body> root):
+        System(sole::uuid4().str(), std::move(root)) {}
+
+System::System(std::string id, std::unique_ptr<Body> root):
+        root_(std::move(root)) {
+    id_ = id;
     universe_ = nullptr;
 }
 
