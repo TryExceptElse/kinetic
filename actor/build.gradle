@@ -21,6 +21,13 @@ model {
                     }
                 }
             }
+            binaries.all {
+                if (debug == 1) {
+                    cppCompiler.args '-O1', '-g'
+                } else {
+                    cppCompiler.args '-O3'
+                }
+            }
             binaries.withType(SharedLibraryBinary) { binary ->
                 buildable = false
             }
