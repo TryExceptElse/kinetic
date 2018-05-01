@@ -14,10 +14,10 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs "src", "third_party"
+                        srcDirs "src", "third_party/src"
                     }
                     exportedHeaders {
-                        srcDirs "src", "third_party"
+                        srcDirs "src", "third_party/src"
                     }
                 }
             }
@@ -29,7 +29,7 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs "test", 'third_party_test'
+                        srcDirs "test", 'third_party/test'
                     }
                 }
             }
