@@ -21,6 +21,24 @@ Body::Body(const std::string id, const double GM, const double r,
     orbit_ = std::move(orbit);
 }
 
+bool Body::AddChild(std::unique_ptr<Body> child) {
+    if (child == nullptr) {
+        throw std::invalid_argument("Body::AddChild() : "
+            "Passed body was null.");
+    }
+    if (children_.find(child->id()) != children_.end()) {
+        // Nothing needs to be done.
+        return false;
+    }
+    child->parent_ = this;
+    children_[child->id()] = std::move(child);
+    return true;
+}
+
+bool Body::IsParent(const Body &body) {
+    return children_.find(body.id()) != children_.end();
+}
+
 double Body::sphere_of_influence() const {
     // check that SOI can be calculated. If not, return -1.
     if (!HasParent()) {

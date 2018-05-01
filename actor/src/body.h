@@ -55,6 +55,8 @@ class Body {
     // methods
 
     bool HasParent() const { return parent_ != nullptr; }
+    bool AddChild(std::unique_ptr<Body> body);
+    bool IsParent(const Body &body);
     Orbit Predict(const double t) const;
     Vector PredictLocalPosition(const double t) const;
     Vector PredictSystemPosition(const double t) const;
