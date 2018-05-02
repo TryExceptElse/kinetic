@@ -13,7 +13,7 @@ Body::Body(const double GM, const double r, std::unique_ptr<Orbit> orbit):
         Body(sole::uuid4().str(), GM, r) {}
 
 Body::Body(const std::string id, const double GM, const double r):
-        GM_(GM), r_(r), id_(id) {}
+        GM_(GM), r_(r), id_(id), parent_(nullptr) {}
 
 Body::Body(const std::string id, const double GM, const double r,
     std::unique_ptr<Orbit> orbit):
@@ -55,7 +55,7 @@ Vector Body::PredictLocalPosition(const double t) const {
 
 Vector Body::PredictSystemPosition(const double t) const {
     return PredictLocalPosition(t) + (
-        HasParent() ? Vector(0, 0, 0) : parent_->PredictSystemPosition(t));
+        HasParent() ? parent_->PredictSystemPosition(t) : Vector(0, 0, 0));
 }
 
 Vector Body::PredictLocalVelocity(const double t) const {
@@ -64,7 +64,7 @@ Vector Body::PredictLocalVelocity(const double t) const {
 
 Vector Body::PredictSystemVelocity(const double t) const {
     return PredictLocalVelocity(t) + (
-        HasParent() ? Vector(0, 0, 0) : parent_->PredictSystemVelocity(t));
+        HasParent() ? parent_->PredictSystemVelocity(t) : Vector(0, 0, 0));
 }
 
 

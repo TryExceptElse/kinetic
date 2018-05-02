@@ -51,9 +51,7 @@ class Orbit {
 
     Orbit(const Body &ref, const Vector r, const Vector v);
 
-    Orbit(double u, const Vector r, const Vector v): u(u) {
-        CalcFromPosVel(r, v);
-    }
+    Orbit(double u, const Vector r, const Vector v);
 
     // getters
 

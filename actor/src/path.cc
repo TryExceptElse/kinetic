@@ -342,6 +342,10 @@ KinematicData FlightPath::SegmentGroup::Predict(const double t) const {
 
 const FlightPath::Segment&
         FlightPath::SegmentGroup::GetSegment(const double t) const {
+    if (segments_.size() == 0) {
+        throw std::runtime_error("SegmentGroup::GetSegment() : "
+            "No segments present.");
+    }
     const auto following_iterator = segments_.upper_bound(t);
     if (following_iterator == segments_.begin()) {
         throw std::invalid_argument(

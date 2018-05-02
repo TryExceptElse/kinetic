@@ -18,7 +18,17 @@ Orbit::Orbit(const Body &ref,
     u(ref.gm()), a(a), e(e), i(i), l(l), w(w), t(t) {}
 
 Orbit::Orbit(const Body &ref, const Vector r, const Vector v):
-    Orbit(ref.gm(), r, v) {}
+    Orbit(ref.gm(), r, v) {
+}
+
+Orbit::Orbit(double u, const Vector r, const Vector v): u(u) {
+    // Validate inputs
+    if (r.sqlen() == 0.0) {
+        throw std::invalid_argument("Orbit initialized with r of [0,0,0]");
+    }
+    // Initialize orbital parameters
+    CalcFromPosVel(r, v);
+}
 
 // Getters ------------------------------------------------------------
 
