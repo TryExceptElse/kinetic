@@ -80,6 +80,9 @@ FlightPath::FlightPath(
         throw std::invalid_argument("FlightPath::FlightPath() : "
             "Passed position r was [0,0,0]");
     }
+    cache_.status.end_t     = t;
+    cache_.status.r         = r;
+    cache_.status.v         = v;
 }
 
 KinematicData FlightPath::Predict(const double time) const {

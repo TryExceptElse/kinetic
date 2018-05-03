@@ -69,10 +69,11 @@ TEST_CASE( "test segment group can predict half orbit", "[BallisticSegment]" ) {
     const kin::Vector v(7320.0,             11329.0,            -0211.0       );
     const double t0 = 1000000.0;
     const double half_orbit = 374942509.78053558 / 2;
-    const kin::FlightPath::BallisticSegmentGroup
-        segment_group(system, r, v, t0);
+    kin::FlightPath::BallisticSegmentGroup segment_group(system, r, v, t0);
 
-    const kin::KinematicData result = segment_group.Predict(half_orbit + t0);
+    const double tf = half_orbit + t0;
+    segment_group.Calculate(tf);
+    const kin::KinematicData result = segment_group.Predict(tf);
 
     REQUIRE( result.r.x == Approx(-712305324741.15112).epsilon(0.0001) );
     REQUIRE( result.r.y == Approx(365151451881.22858).epsilon(0.0001) );
