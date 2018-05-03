@@ -71,7 +71,16 @@ double Maneuver::FindMassAtTime(const double t) const {
 
 FlightPath::FlightPath(
     const System &system, const Vector r, const Vector v, double t):
-        system_(system), r0_(r), v0_(v), t0_(t) {}
+        system_(system), r0_(r), v0_(v), t0_(t) {
+    if (t < 0) {
+        throw std::invalid_argument("FlightPath::FlightPath() : "
+            "Passed value t (" + std::to_string(t) + ") was < 0");
+    }
+    if (r.sqlen() == 0.0) {
+        throw std::invalid_argument("FlightPath::FlightPath() : "
+            "Passed position r was [0,0,0]");
+    }
+}
 
 KinematicData FlightPath::Predict(const double time) const {
     return GetSegment(time).Predict(time);
@@ -331,6 +340,14 @@ FlightPath::SegmentGroup::SegmentGroup(
         const System &system, const Maneuver * const maneuver,
         const Vector r, const Vector v, double t):
         system_(system), maneuver_(maneuver), r_(r), v_(v), t_(t) {
+    if (t < 0) {
+        throw std::invalid_argument("SegmentGroup::SegmentGroup() : "
+            "Passed value t (" + std::to_string(t) + ") was < 0");
+    }
+    if (r.sqlen() == 0.0) {
+        throw std::invalid_argument("SegmentGroup::SegmentGroup() : "
+            "Passed position r was [0,0,0]");
+    }
     calculation_status_.r = r;
     calculation_status_.v = v;
     calculation_status_.end_t = t;
@@ -397,6 +414,11 @@ FlightPath::ManeuverSegmentGroup::ManeuverSegmentGroup(
         const Vector r, const Vector v, double t):
             SegmentGroup(system, maneuver, r, v, t) {
     // validate input
+    if (maneuver == nullptr) {
+        throw std::invalid_argument(
+            "ManeuverSegmentGroup::ManeuverSegmentGroup() : "
+            "Passed maneuver was null");
+    }
     if (maneuver->t0() != t) {
         throw std::invalid_argument(
             "t: " + std::to_string(t) + " does not match maneuver t0: " +
