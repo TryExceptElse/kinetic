@@ -94,7 +94,8 @@ class Maneuver {
      * reference Body.
      * Returns vector relative to reference body.
      */
-    Vector FindThrustVector(const Vector r, const Vector v) const;
+    Vector FindThrustVector(
+        const Body &ref, const Vector r, const Vector v, const double t) const;
 
  private:
     ManeuverType type_;  // type of maneuver
