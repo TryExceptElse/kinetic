@@ -42,6 +42,11 @@ class Vector {
                       x * other.y - y * other.x);
     }
 
+    Vector norm() const {
+        const double mod = 1.0 / len();
+        return Vector(x * mod, y * mod, z * mod);
+    }
+
     Vector operator* (const Vector other) const { return Cross(other); }
 
     Vector operator* (const double scalar) const {

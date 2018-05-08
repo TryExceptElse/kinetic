@@ -20,6 +20,7 @@
 #include <vector>
 #include <utility>  // pair
 #include <stdexcept>
+#include <algorithm>
 #include "system.h"
 
 namespace kin {
@@ -207,6 +208,11 @@ KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
     }
     Calculate(t);
     // todo
+    // A number of approximations are made here that reduce the
+    // accuracy of the result, but which simplify the code,
+    // and are faster to evaluate.
+    // If accuracy becomes an issue, this method should be re-written.
+
 }
 
 FlightPath::CalculationStatus
@@ -214,7 +220,27 @@ FlightPath::CalculationStatus
     if (t < calculation_status_.end_t) {
         return calculation_status_;
     }
+    const Orbit initial_orbit(primary_body_, r0_, v0_);
     // Attempt to determine when segment ends.
+
+    // Check first for duration in which maximum mass ratio
+    // change occurs.
+    const double delta_m = maneuver_.m0() * kMaxMassRatioChangePerStep;
+    const double mass_limited_duration =
+        delta_m / maneuver_.performance().flow_rate();
+    // Check max duration of step allowed by ratio of orbital period.
+    const double period_limited_duration =
+        initial_orbit.period() * kMaxOrbitPeriodDurationPerStep;
+    // Use smaller of the two duration limits.
+    const double duration = std::min(
+        mass_limited_duration, period_limited_duration);
+    const double tf = t0_ + duration;
+    // Approximate average acceleration over duration of step.
+    const double a0_mag = maneuver_.performance().thrust() / m0_;
+    const double mf = maneuver_.FindMassAtTime(tf);
+    const double a1_mag = maneuver_.performance().thrust() / mf;
+    // Find acceleration vector
+
     throw std::runtime_error(""); // PLACEHOLDER
 }
 

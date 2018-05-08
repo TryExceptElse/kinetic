@@ -79,11 +79,13 @@ class Maneuver {
     double m1() const { return m0_ - expended_mass(); }
     double t0() const { return t0_; }
     double t1() const { return t0_ + duration(); }  // end time of maneuver.
+    const PerformanceData& performance() const { return performance_; }
     double duration() const;
     double mass_fraction() const;  // mass ratio 0-1 which is expended.
     double expended_mass() const;  // propellant mass expended.
 
     double FindMassAtTime(const double t) const;
+    Vector FindThrustVector() const;
 
  private:
     ManeuverType type_;  // type of maneuver
@@ -195,7 +197,7 @@ class FlightPath {
      * Segment must end when it moves into a different primary sphere
      * of influence.
      */
-    class Segment {  // todo
+    class Segment {
      public:
         /**
          * Creates segment, that begins at position r, with velocity v,
@@ -242,9 +244,11 @@ class FlightPath {
 
         KinematicData Predict(const double t) const;
         CalculationStatus Calculate(const double t) const;
+
      private:
         const Maneuver &maneuver_;
-        const double m0_;
+        const double m0_;               // Mass at beginning of segment.
+        Vector a_;                      // Acceleration used for approximation.
     };
 
     // ----------------------------------------------------------------
