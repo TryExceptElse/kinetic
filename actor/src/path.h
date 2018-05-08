@@ -85,7 +85,16 @@ class Maneuver {
     double expended_mass() const;  // propellant mass expended.
 
     double FindMassAtTime(const double t) const;
-    Vector FindThrustVector() const;
+
+    /**
+     * Finds normalized vector indicating maneuver's direction of
+     * thrust at a given position and velocity, with a given reference
+     * body.
+     * Expects position and velocity vectors to be relative to a
+     * reference Body.
+     * Returns vector relative to reference body.
+     */
+    Vector FindThrustVector(const Vector r, const Vector v) const;
 
  private:
     ManeuverType type_;  // type of maneuver

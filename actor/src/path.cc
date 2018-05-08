@@ -66,6 +66,31 @@ double Maneuver::FindMassAtTime(const double t) const {
     return m0_ - (t - t0_) * performance_.flow_rate();
 }
 
+Vector Maneuver::FindThrustVector(
+        const Body &ref, const Vector r, const Vector v, const double t) const {
+    const Vector body_r = ref.PredictSystemPosition(t);
+    const Vector body_v = ref.PredictSystemVelocity(t);
+    const Vector rel_r = r - body_r;
+    const Vector rel_v = v - body_v;
+    switch (type_) {
+        case kPrograde:
+            return rel_v.norm();
+        case kRetrograde:
+            return rel_v.norm() * -1.0;
+        case kRadial:
+            return rel_r.norm();
+        case kAntiRadial:
+            return rel_r.norm() * -1.0;
+        case kNormal:
+            return rel_r.Cross(rel_v).norm();  // North when i is 0.0
+        case kAntiNormal:
+            return rel_v.Cross(rel_r).norm();  // South when i is 0.0
+        case kFixed:
+            throw std::runtime_error("Maneuver::FindThrustVector() : "
+                "Fixed thrust vector not yet implemented.");
+    }
+}
+
 
 // FlightPath methods -------------------------------------------------
 
