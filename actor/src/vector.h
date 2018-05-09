@@ -53,6 +53,10 @@ class Vector {
         return Vector(scalar * x, scalar * y, scalar * z);
     }
 
+    Vector operator/ (const double rhs) const {
+        return Vector(x / rhs, y / rhs, z / rhs);
+    }
+
     Vector operator- (const double scalar) const {
         return Vector(x - scalar, y - scalar, z - scalar);
     }

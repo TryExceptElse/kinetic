@@ -249,6 +249,27 @@ KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
 
 FlightPath::CalculationStatus
         FlightPath::ManeuverSegment::Calculate(const double t) const {
+    // This method prepares the Segment to approximate the position and
+    // velocity over the duration of the segment by approximating the
+    // mean acceleration from thrust and gravity over the duration of
+    // the segment.
+    //
+    // Duration is determined by arbitrary limits, determined by ratio
+    // of segment duration to orbital period, and ratio of segment
+    // duration to duration required to change actor mass by a
+    // set amount.
+    //
+    // Acceleration due to thrust is determined by the acceleration at
+    // the mean mass of the actor over the duration of the segment, and
+    // the direction determined by maneuver.
+    //
+    // Acceleration due to gravity is determined by the acceleration
+    // imposed by the primary body influencing the actor at the mean
+    // position of the segment, ignoring gravitational effects.
+    //
+    // Approximate acceleration used in prediction of position is the
+    // sum of thrust acceleration and gravitational acceleration.
+
     if (t < calculation_status_.end_t) {
         return calculation_status_;
     }
@@ -271,9 +292,27 @@ FlightPath::CalculationStatus
     const double a0_mag = maneuver_.performance().thrust() / m0_;
     const double mf = maneuver_.FindMassAtTime(tf);
     const double a1_mag = maneuver_.performance().thrust() / mf;
+    const double a_mag = (a0_mag * 2 + a1_mag) / 3;
     // Find acceleration vector
-
-    throw std::runtime_error(""); // PLACEHOLDER
+    // First find gravity independent position.
+    const Vector thrust_a = maneuver_.FindThrustVector(
+        primary_body_, r0_, v0_, t0_) * a_mag;
+    const Vector gravity_independent_r1 =
+        thrust_a * (std::pow(duration / 2, 2) / 2) + r0_;
+    // Find gravitational acceleration from mean position of
+    // r0 and gravity-independent rf
+    // First, find relative position from primary body.
+    const double mean_t =  t0_ + duration / 2;
+    const Vector body_r1 = primary_body_.PredictSystemPosition(mean_t);
+    const Vector rel_r1 = gravity_independent_r1 - body_r1;
+    const double gravity_a_mag = primary_body_.gm() / rel_r1.sqlen();
+    const Vector gravity_a = rel_r1.norm() * -gravity_a_mag;
+    // Set approximate acceleration used in segment.
+    a_ = gravity_a + thrust_a;
+    // Compute values needed in returned CalculationStatus.
+    const Vector rf = r0_ + a_ / 2 * std::pow(duration, 2);
+    const Vector vf = v0_ + a_ * duration;
+    return CalculationStatus(rf, vf, tf, false);
 }
 
 // BallisticSegment ---------------------------------------------------

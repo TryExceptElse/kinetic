@@ -153,6 +153,9 @@ class FlightPath {
     /** Used to return results of flight path calculation */
     struct CalculationStatus {
         CalculationStatus(): end_t(-1.0), incomplete_element(false) {}
+        CalculationStatus(
+            const Vector r, const Vector v, double end_t, bool incomplete):
+                end_t(end_t), r(r), v(v), incomplete_element(incomplete) {}
 
         double end_t;  // Time at which evaluation of segment ended.
         Vector r;      // Final position of calculation segment.
@@ -269,7 +272,7 @@ class FlightPath {
      private:
         const Maneuver &maneuver_;
         const double m0_;               // Mass at beginning of segment.
-        Vector a_;                      // Acceleration used for approximation.
+        mutable Vector a_;              // Acceleration used for approximation.
     };
 
     // ----------------------------------------------------------------
