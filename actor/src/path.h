@@ -73,6 +73,16 @@ class Maneuver {
              double m0,
              double t0);
 
+    /**
+     * Alternative Maneuver constructor that creates a Maneuver of a fixed
+     * vector
+     */
+    Maneuver(const Vector vector,
+             double dv,
+             const PerformanceData data,
+             double m0,
+             double t0);
+
     ManeuverType type() const { return type_; }
     double dv() const { return dv_; }
     double m0() const { return m0_; }
@@ -99,6 +109,7 @@ class Maneuver {
 
  private:
     ManeuverType type_;  // type of maneuver
+    Vector fixed_vector_;  // Used when vector is fixed, otherwise ignored.
     double dv_;  // delta-V of maneuver
     PerformanceData performance_;
     double m0_;

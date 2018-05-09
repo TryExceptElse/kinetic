@@ -41,6 +41,14 @@ Maneuver::Maneuver(ManeuverType type,
                    double t0):
         type_(type), dv_(dv), performance_(performance), m0_(m0), t0_(t0) {}
 
+Maneuver::Maneuver(const Vector vector,
+                   double dv,
+                   const PerformanceData performance,
+                   double m0,
+                   double t0):
+        type_(kFixed), fixed_vector_(vector),
+        dv_(dv), performance_(performance), m0_(m0), t0_(t0) {}
+
 double Maneuver::mass_fraction() const {
     return 1 - std::pow(e, -dv_ / performance_.ve());
 }
@@ -86,8 +94,7 @@ Vector Maneuver::FindThrustVector(
         case kAntiNormal:
             return rel_v.Cross(rel_r).norm();  // South when i is 0.0
         case kFixed:
-            throw std::runtime_error("Maneuver::FindThrustVector() : "
-                "Fixed thrust vector not yet implemented.");
+            return fixed_vector_;
     }
 }
 
