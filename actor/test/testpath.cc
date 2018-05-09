@@ -160,9 +160,9 @@ TEST_CASE( "test normal thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(0.019992   ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(-0.019992    ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(-0.9996      ).epsilon(0.0001) );
+    REQUIRE( result.x == Approx(0.019992    ).epsilon(0.0001) );
+    REQUIRE( result.y == Approx(-0.019992   ).epsilon(0.0001) );
+    REQUIRE( result.z == Approx(-0.9996     ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test anti-normal thrust vector is calculated", "[Maneuver]" ) {
@@ -177,7 +177,7 @@ TEST_CASE( "test anti-normal thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(-0.019992    ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(0.019992   ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(0.9996     ).epsilon(0.0001) );
+    REQUIRE( result.x == Approx(-0.019992   ).epsilon(0.0001) );
+    REQUIRE( result.y == Approx(0.019992    ).epsilon(0.0001) );
+    REQUIRE( result.z == Approx(0.9996      ).epsilon(0.0001) );
 }
