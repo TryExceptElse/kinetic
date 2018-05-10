@@ -234,17 +234,30 @@ FlightPath::ManeuverSegment::ManeuverSegment(
 
 KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
     if (t < 0) {
-        std::invalid_argument(
+        throw std::invalid_argument(
             "FlightPath::ManeuverSegment::Predict() : Passed t: " +
             std::to_string(t));
     }
+    if (t < t0_) {
+        throw std::invalid_argument("FlightPath::ManeuverSegment::Predict() : "
+            "Passed t preceded start time of segment. t: " + std::to_string(t) +
+            "start: " + std::to_string(t0_));
+    }
     Calculate(t);
+    if (t >= calculation_status_.end_t) {
+        throw std::invalid_argument( "FlightPath::ManeuverSegment::Predict() : "
+            "Passed t was >= end time of segment. t: " + std::to_string(t) +
+            "end: " + std::to_string(calculation_status_.end_t));
+    }
     // todo
     // A number of approximations are made here that reduce the
     // accuracy of the result, but which simplify the code,
     // and are faster to evaluate.
     // If accuracy becomes an issue, this method should be re-written.
-
+    const double rel_t = t - t0_;
+    const Vector r = r0_ + a_ * (std::pow(rel_t, 2) / 2);
+    const Vector v = v0_ + a_ * rel_t;
+    return {r, v};
 }
 
 FlightPath::CalculationStatus
@@ -312,7 +325,7 @@ FlightPath::CalculationStatus
     // Compute values needed in returned CalculationStatus.
     const Vector rf = r0_ + a_ / 2 * std::pow(duration, 2);
     const Vector vf = v0_ + a_ * duration;
-    return CalculationStatus(rf, vf, tf, false);
+    return calculation_status_ = CalculationStatus(rf, vf, tf, false);
 }
 
 // BallisticSegment ---------------------------------------------------
