@@ -45,8 +45,7 @@ struct KinematicData {
 };
 
 /**
- * Structure containing information about propellant state at an
- * arbitrary time.
+ * Class containing information about maneuver performance.
  */
 class PerformanceData {
  public:

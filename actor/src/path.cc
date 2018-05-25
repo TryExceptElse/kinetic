@@ -29,7 +29,6 @@ namespace kin {
 static constexpr double kMaxOrbitPeriodDurationPerStep      = 0.01;
 static constexpr double kMinBallisticStepDuration           = 15.0;
 static constexpr double kMaxMassRatioChangePerStep          = 0.001;
-static constexpr double kMinManeuverSegmentLen              = 0.06;
 
 // Maneuver methods ---------------------------------------------------
 
@@ -245,11 +244,10 @@ KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
     }
     Calculate(t);
     if (t >= calculation_status_.end_t) {
-        throw std::invalid_argument( "FlightPath::ManeuverSegment::Predict() : "
+        throw std::invalid_argument("FlightPath::ManeuverSegment::Predict() : "
             "Passed t was >= end time of segment. t: " + std::to_string(t) +
             "end: " + std::to_string(calculation_status_.end_t));
     }
-    // todo
     // A number of approximations are made here that reduce the
     // accuracy of the result, but which simplify the code,
     // and are faster to evaluate.
