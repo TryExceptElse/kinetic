@@ -207,7 +207,7 @@ class FlightPath {
     // members
 
     std::map<double, std::unique_ptr<Maneuver> > maneuvers_;
-    // raw pointer should never be invalid when used as intended;
+    // Raw pointer should never be invalid when used as intended;
     // system owns actor, which owns path. If system is destroyed,
     // so is FlightPath.
     const System &system_;
@@ -225,7 +225,7 @@ class FlightPath {
 
     /**
      * Get Segment of orbit which describes position at time t.
-     * This method is not constant because it may have to calculate
+     * This method may have to calculate
      * additional orbital segments before it can return the
      * desired Segment.
      */

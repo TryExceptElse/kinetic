@@ -48,7 +48,7 @@ class System {
  private:
     std::string id_;
     Universe *universe_;  // reference back to parent universe
-    std::unique_ptr<Body> root_;  // root body object - others may have weak ptr
+    std::unique_ptr<Body> root_;  // root body object - others may have raw ptr
     Vector v_;  // system velocity relative to the avg of the stellar medium.
     std::set<std::string> actor_ids;  // allows lookup of actor in universe
 };
