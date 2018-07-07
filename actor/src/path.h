@@ -29,14 +29,6 @@ class System;
 // --------------------------------------------------------------------
 
 /**
- * Enum defining the type of maneuver being performed.
- * This will determine the direction of acceleration over time.
- */
-enum ManeuverType {
-    kPrograde, kRetrograde, kNormal, kAntiNormal, kRadial, kAntiRadial, kFixed
-};
-
-/**
  * Structure containing kinematic information about an object
  */
 struct KinematicData {
@@ -66,6 +58,16 @@ class PerformanceData {
 // https://en.wikipedia.org/wiki/Tsiolkovsky_rocket_equation
 class Maneuver {
  public:
+
+    /**
+     * Enum defining the type of maneuver being performed.
+     * This will determine the direction of acceleration over time.
+     */
+    enum ManeuverType {
+        kPrograde, kRetrograde, kNormal, kAntiNormal, kRadial, kAntiRadial,
+        kFixed
+    };
+
     Maneuver(ManeuverType type,
              double dv,
              const PerformanceData data,

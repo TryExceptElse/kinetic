@@ -42,7 +42,7 @@ TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     // Add maneuver
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     path.Add(kin::Maneuver(
-            kin::kPrograde,  // Maneuver Type
+            kin::Maneuver::kPrograde,  // Maneuver Type
             2000.0,  // DV
             performance,
             150.0,  // m0
@@ -84,7 +84,7 @@ TEST_CASE( "test path maneuver increases velocity", "[Path]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     const double dv = 2000.0;
     const kin::Maneuver maneuver(
-            kin::kPrograde,  // Maneuver Type
+            kin::Maneuver::kPrograde,  // Maneuver Type
             dv,  // DV
             performance,
             150.0,  // m0
@@ -163,7 +163,8 @@ TEST_CASE( "test prograde thrust vector is calculated", "[Maneuver]" ) {
     const kin::Vector v(-0.7, -0.7, 0.0);
     const double t = 0.0;
     const kin::PerformanceData performance(3500, 10000);
-    const kin::Maneuver maneuver(kin::kPrograde, 100.0, performance, 80, 0.0);
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde, 100.0, performance, 80, 0.0);
 
     const kin::Vector result = maneuver.FindThrustVector(ref, r, v, 0.0);
 
@@ -180,7 +181,8 @@ TEST_CASE( "test retrograde thrust vector is calculated", "[Maneuver]" ) {
     const kin::Vector v(-0.7, -0.7, 0.0);
     const double t = 0.0;
     const kin::PerformanceData performance(3500, 10000);
-    const kin::Maneuver maneuver(kin::kRetrograde, 100.0, performance, 80, 0.0);
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kRetrograde, 100.0, performance, 80, 0.0);
 
     const kin::Vector result = maneuver.FindThrustVector(ref, r, v, 0.0);
 
@@ -197,7 +199,8 @@ TEST_CASE( "test radial thrust vector is calculated", "[Maneuver]" ) {
     const kin::Vector v(-0.7, -0.7, 3.0);
     const double t = 0.0;
     const kin::PerformanceData performance(3500, 10000);
-    const kin::Maneuver maneuver(kin::kRadial, 100.0, performance, 80, 0.0);
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kRadial, 100.0, performance, 80, 0.0);
 
     const kin::Vector result = maneuver.FindThrustVector(ref, r, v, 0.0);
 
@@ -214,7 +217,8 @@ TEST_CASE( "test anti-radial thrust vector is calculated", "[Maneuver]" ) {
     const kin::Vector v(-0.7, -0.7, 0.0);
     const double t = 0.0;
     const kin::PerformanceData performance(3500, 10000);
-    const kin::Maneuver maneuver(kin::kAntiRadial, 100.0, performance, 80, 0.0);
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kAntiRadial, 100.0, performance, 80, 0.0);
 
     const kin::Vector result = maneuver.FindThrustVector(ref, r, v, 0.0);
 
@@ -231,7 +235,8 @@ TEST_CASE( "test normal thrust vector is calculated", "[Maneuver]" ) {
     const kin::Vector v(-0.7, -0.7, 0.0);
     const double t = 0.0;
     const kin::PerformanceData performance(3500, 10000);
-    const kin::Maneuver maneuver(kin::kNormal, 100.0, performance, 80, 0.0);
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kNormal, 100.0, performance, 80, 0.0);
 
     const kin::Vector result = maneuver.FindThrustVector(ref, r, v, 0.0);
 
@@ -248,7 +253,8 @@ TEST_CASE( "test anti-normal thrust vector is calculated", "[Maneuver]" ) {
     const kin::Vector v(-0.7, -0.7, 0.0);
     const double t = 0.0;
     const kin::PerformanceData performance(3500, 10000);
-    const kin::Maneuver maneuver(kin::kAntiNormal, 100.0, performance, 80, 0.0);
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kAntiNormal, 100.0, performance, 80, 0.0);
 
     const kin::Vector result = maneuver.FindThrustVector(ref, r, v, 0.0);
 
@@ -280,7 +286,7 @@ TEST_CASE( "test fixed thrust vector is returned correctly", "[Maneuver]" ) {
 TEST_CASE( "test maneuver has correct final mass fraction", "[Maneuver]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     const kin::Maneuver maneuver(
-            kin::kPrograde,  // Maneuver Type
+            kin::Maneuver::kPrograde,  // Maneuver Type
             1216.4,  // DV
             performance,
             150.0,  // m0
@@ -291,7 +297,7 @@ TEST_CASE( "test maneuver has correct final mass fraction", "[Maneuver]" ) {
 TEST_CASE( "test maneuver has correct final expended mass", "[Maneuver]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     const kin::Maneuver maneuver(
-            kin::kPrograde,  // Maneuver Type
+            kin::Maneuver::kPrograde,  // Maneuver Type
             1216.4,  // DV
             performance,
             150.0,  // m0
@@ -302,7 +308,7 @@ TEST_CASE( "test maneuver has correct final expended mass", "[Maneuver]" ) {
 TEST_CASE( "test maneuver has correct duration", "[Maneuver]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     const kin::Maneuver maneuver(
-            kin::kPrograde,  // Maneuver Type
+            kin::Maneuver::kPrograde,  // Maneuver Type
             1216.4,  // DV
             performance,
             150.0,  // m0
@@ -313,7 +319,7 @@ TEST_CASE( "test maneuver has correct duration", "[Maneuver]" ) {
 TEST_CASE( "test maneuver has correct t1", "[Maneuver]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     const kin::Maneuver maneuver(
-            kin::kPrograde,  // Maneuver Type
+            kin::Maneuver::kPrograde,  // Maneuver Type
             1216.4,  // DV
             performance,
             150.0,  // m0
