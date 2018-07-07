@@ -112,9 +112,7 @@ FlightPath::FlightPath(
         throw std::invalid_argument("FlightPath::FlightPath() : "
             "Passed position r was [0,0,0]");
     }
-    cache_.status.end_t     = t;
-    cache_.status.r         = r;
-    cache_.status.v         = v;
+    cache_.status = FlightPath::CalculationStatus(r, v, t);
 }
 
 KinematicData FlightPath::Predict(const double time) const {
@@ -150,6 +148,7 @@ void FlightPath::Add(const Maneuver &maneuver) {
         }
     }
     maneuvers_[maneuver.t0()] = std::make_unique<Maneuver>(maneuver);  // Copy.
+    ClearCache();  // Reset calculated data (calculated segments, etc).
 }
 
 bool FlightPath::Clear() {
@@ -220,6 +219,11 @@ const FlightPath::Segment& FlightPath::GetSegment(const double t) const {
     SegmentGroup &group = *std::prev(cache_.groups.upper_bound(t))->second;
     // Get segment immediately before, or starting at time t.
     return group.GetSegment(t);
+}
+
+void FlightPath::ClearCache() const {
+    cache_ = FlightPath::FlightPathCache();
+    cache_.status = FlightPath::CalculationStatus(r0_, v0_, t0_);
 }
 
 FlightPath::SegmentGroup* FlightPath::last_group() const {

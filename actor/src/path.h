@@ -178,7 +178,10 @@ class FlightPath {
     struct CalculationStatus {
         CalculationStatus(): end_t(-1.0), incomplete_element(false) {}
         CalculationStatus(
-            const Vector r, const Vector v, double end_t, bool incomplete):
+            const Vector r,
+            const Vector v,
+            double end_t,
+            bool incomplete = false):
                 end_t(end_t), r(r), v(v), incomplete_element(incomplete) {}
 
         double end_t;  // Time at which evaluation of segment ended.
@@ -227,6 +230,13 @@ class FlightPath {
      * desired Segment.
      */
     const Segment& GetSegment(const double t) const;
+
+    /**
+     * Clears cached data and restores cache to default state.
+     * This is intended to be used when path maneuvers are changed.
+     * or other events occur that may change path trajectory
+     */
+    void ClearCache() const;  // Only mutable members changed.
 
     // private getters
 
