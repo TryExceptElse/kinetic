@@ -31,19 +31,78 @@ TEST_CASE( "test path with no maneuvers can be calculated", "[Path]" ) {
 TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+
+    // Create Initial Orbit
     const kin::System system(std::move(body));
     const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
     const kin::Vector v(7320.0, 11329.0, -0211.0);
-    const kin::FlightPath path(system, r, v, 0);
+    kin::FlightPath path(system, r, v, 0);
+    const double half_orbit_t = 374942509.78053558 / 2;
+
+    // Add maneuver
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    path.Add(kin::Maneuver(
+            kin::kPrograde,  // Maneuver Type
+            2000.0,  // DV
+            performance,
+            150.0,  // m0
+            half_orbit_t));  // t0
+
     // predict orbit of 1/2 period from t0.
-    const kin::KinematicData prediction = path.Predict(374942509.78053558 / 2);
+    const kin::KinematicData prediction1 = path.Predict(half_orbit_t);
 
     // This test doesn't try to determine a precise position, just that
     // the calculation can complete, and results in a changed orbit.
-    const kin::Vector position = prediction.r;
-    REQUIRE( position.x != Approx(-712305324741.15112).epsilon(0.0001) );
-    REQUIRE( position.y != Approx(365151451881.22858).epsilon(0.0001) );
-    REQUIRE( position.z != Approx(14442203602.998617).epsilon(0.0001) );
+    const kin::Vector position1 = prediction1.r;
+    REQUIRE( position1.x == Approx(-712305324741.15112).epsilon(0.0001) );
+    REQUIRE( position1.y == Approx(365151451881.22858).epsilon(0.0001) );
+    REQUIRE( position1.z == Approx(14442203602.998617).epsilon(0.0001) );
+
+    // predict orbit of 3/2 period from t0.
+    // Orbit should have changed notably
+    const kin::KinematicData prediction2 =
+            path.Predict(374942509.78053558 * 3.0 / 2.0);
+    const kin::Vector position2 = prediction2.r;
+    REQUIRE( position2.x != Approx(-712305324741.15112).epsilon(0.01) );
+    REQUIRE( position2.y != Approx(365151451881.22858).epsilon(0.01) );
+    REQUIRE( position2.z != Approx(14442203602.998617).epsilon(0.01) );
+}
+
+
+TEST_CASE( "test path maneuver increases velocity", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+
+    // Create Initial Orbit
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+    const double half_orbit_t = 374942509.78053558 / 2;
+
+    // Add maneuver
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const double dv = 2000.0;
+    const kin::Maneuver maneuver(
+            kin::kPrograde,  // Maneuver Type
+            dv,  // DV
+            performance,
+            150.0,  // m0
+            half_orbit_t);  // t0
+    path.Add(maneuver);
+
+    // predict orbit of 1/2 period from t0.
+    const kin::KinematicData prediction0 = path.Predict(half_orbit_t);
+    // predict orbit at end of burn
+    const kin::KinematicData prediction1 = path.Predict(maneuver.t1());
+
+    // This test doesn't try to determine a precise velocity, just that
+    // it has increased a roughly expected amount.
+    const kin::Vector v0 = prediction0.v;
+    const kin::Vector v1 = prediction1.v;
+
+    // New velocity should be increased by burn DV.
+    REQUIRE( v1.len() == Approx(v0.len() + dv) );
 }
 
 TEST_CASE( "test segment can predict half orbit", "[BallisticSegment]" ) {
@@ -216,4 +275,54 @@ TEST_CASE( "test fixed thrust vector is returned correctly", "[Maneuver]" ) {
     REQUIRE( result.x == Approx(1.0   ).epsilon(0.0001) );
     REQUIRE( result.y == Approx(2.0   ).epsilon(0.0001) );
     REQUIRE( result.z == Approx(3.0   ).epsilon(0.0001) );
+}
+
+TEST_CASE( "test maneuver has correct final mass fraction", "[Maneuver]" ) {
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const kin::Maneuver maneuver(
+            kin::kPrograde,  // Maneuver Type
+            1216.4,  // DV
+            performance,
+            150.0,  // m0
+            30);  // t0
+    REQUIRE( maneuver.mass_fraction() == Approx(0.333333).epsilon(0.0001) );
+}
+
+TEST_CASE( "test maneuver has correct final expended mass", "[Maneuver]" ) {
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const kin::Maneuver maneuver(
+            kin::kPrograde,  // Maneuver Type
+            1216.4,  // DV
+            performance,
+            150.0,  // m0
+            30);  // t0
+    REQUIRE( maneuver.expended_mass() == Approx(50.0).epsilon(0.0001) );
+}
+
+TEST_CASE( "test maneuver has correct duration", "[Maneuver]" ) {
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const kin::Maneuver maneuver(
+            kin::kPrograde,  // Maneuver Type
+            1216.4,  // DV
+            performance,
+            150.0,  // m0
+            30);  // t0
+    REQUIRE( maneuver.duration() == Approx(7.5).epsilon(0.0001) );
+}
+
+TEST_CASE( "test maneuver has correct t1", "[Maneuver]" ) {
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const kin::Maneuver maneuver(
+            kin::kPrograde,  // Maneuver Type
+            1216.4,  // DV
+            performance,
+            150.0,  // m0
+            30);  // t0
+    REQUIRE( maneuver.t1() == Approx(37.5).epsilon(0.0001) );
+}
+
+TEST_CASE( "test performance has correct flow rate", "[PerformanceData]" ) {
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    REQUIRE( performance.flow_rate() == Approx(6.66666666667).epsilon(0.0001) );
+
 }
