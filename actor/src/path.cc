@@ -53,7 +53,7 @@ double Maneuver::mass_fraction() const {
 }
 
 double Maneuver::duration() const {
-    return mass_fraction() / performance_.flow_rate();
+    return expended_mass() / performance_.flow_rate();
 }
 
 double Maneuver::expended_mass() const {
