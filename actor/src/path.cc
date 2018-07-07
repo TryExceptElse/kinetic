@@ -131,10 +131,39 @@ const Maneuver* FlightPath::FindManeuver(const double t) const {
         return nullptr;
     }
     // Get iterator of maneuver preceding or equal to time t
-    const Maneuver &preceding_maneuver = std::prev(following_iterator)->second;
+    const Maneuver &preceding_maneuver = *std::prev(following_iterator)->second;
     // If maneuver has ended by or at time t, return nullptr,
     // otherwise ptr to maneuver.
     return preceding_maneuver.t1() <= t ? nullptr : &preceding_maneuver;
+}
+
+void FlightPath::Add(const Maneuver &maneuver) {
+    // Check that maneuver begins after all existing maneuvers
+    // have ended.
+    if (maneuvers_.size() > 0) {
+        const Maneuver &last = *std::prev(maneuvers_.end())->second;
+        if (last.t1() > maneuver.t0()) {
+            throw std::invalid_argument("FlightPath::Add() : "
+                "Passed Maneuver has t0 (" + std::to_string(maneuver.t0()) +
+                ") that precedes the end of the last maneuver already in "
+                "FlightPath (tf: " + std::to_string(last.t1()) + ")");
+        }
+    }
+    maneuvers_[maneuver.t0()] = std::make_unique<Maneuver>(maneuver);  // Copy.
+}
+
+bool FlightPath::Clear() {
+    maneuvers_.clear();
+}
+
+bool FlightPath::ClearAfter(const double t) {
+    std::map<double, std::unique_ptr<Maneuver> >::iterator first =
+        maneuvers_.upper_bound(t);
+    maneuvers_.erase(first, maneuvers_.end());
+}
+
+bool FlightPath::Remove(const Maneuver &maneuver) {
+    maneuvers_.erase(maneuver.t0());
 }
 
 

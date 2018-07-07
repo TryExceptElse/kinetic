@@ -139,6 +139,31 @@ class FlightPath {
      */
     const Maneuver *FindManeuver(const double t) const;
 
+    /**
+     * Adds a maneuver to FlightPath at the specified time.
+     * Added maneuver must have a t0 that is later than the end time
+     * of any existing maneuvers in the FlightPath.
+     *
+     * Added maneuver is copied, no reference to the passed maneuver
+     * is stored within FlightPath.
+     */
+    void Add(const Maneuver &maneuver);
+
+    /**
+     * Removes all maneuvers currently in FlightPath
+     */
+    bool Clear();
+
+    /**
+     * Removes all maneuvers in FlightPath with a t0 after passed time.
+     */
+    bool ClearAfter(const double t);
+
+    /**
+     * Removes specified maneuver.
+     */
+    bool Remove(const Maneuver &maneuver);
+
  private:
     // forward declared nested classes  (declared in full below)
 
@@ -178,7 +203,7 @@ class FlightPath {
 
     // members
 
-    std::map<double, Maneuver> maneuvers_;
+    std::map<double, std::unique_ptr<Maneuver> > maneuvers_;
     // raw pointer should never be invalid when used as intended;
     // system owns actor, which owns path. If system is destroyed,
     // so is FlightPath.
@@ -318,7 +343,7 @@ class FlightPath {
         const std::map<double, std::unique_ptr<Segment> >& segments() const {
             return segments_;
         }
-        const Maneuver * const maneuver() const { return maneuver_; }
+        const Maneuver* maneuver() const { return maneuver_; }
 
      protected:
         const System &system_;

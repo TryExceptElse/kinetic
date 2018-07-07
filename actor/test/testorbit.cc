@@ -11,7 +11,7 @@ TEST_CASE( "test eccentricity is calculated correctly", "[Orbit]" ) {
     kin::Vector v(7320.0, 11329.0, -0211.0);
     kin::Orbit orbit(body, r, v);
 
-    REQUIRE( orbit.eccentricity() == Approx(0.049051434386).epsilon(0.0001) );
+    REQUIRE( orbit.eccentricity() == Approx(0.049051434386).epsilon(0.001) );
 }
 
 TEST_CASE( "test eccentricity is calculated correctly when e > 1", "[Orbit]" ) {
