@@ -3,6 +3,7 @@
 #include "catch.hpp"
 
 #define private public   // horribly hacky way to access private members
+#define protected public
 
 #include "system.h"
 #include "body.h"
@@ -66,6 +67,38 @@ TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     REQUIRE( position2.x != Approx(-712305324741.15112).epsilon(0.01) );
     REQUIRE( position2.y != Approx(365151451881.22858).epsilon(0.01) );
     REQUIRE( position2.z != Approx(14442203602.998617).epsilon(0.01) );
+}
+
+
+TEST_CASE( "test GetSegment returns different seg after maneuver", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+
+    // Create Initial Orbit
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+    const double half_orbit_t = 374942509.78053558 / 2;
+
+    // Add maneuver
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const double dv = 2000.0;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            dv,  // DV
+            performance,
+            150.0,  // m0
+            half_orbit_t);  // t0
+    path.Add(maneuver);
+
+    const double t0 = maneuver.t0();
+    const double t1 = maneuver.t1() + 1;
+
+    const kin::FlightPath::Segment &segment0 = path.GetSegment(t0);
+    const kin::FlightPath::Segment &segment1 = path.GetSegment(t1);
+
+    REQUIRE(segment0.r0_ != segment1.r0_);
 }
 
 
