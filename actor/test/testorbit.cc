@@ -1,8 +1,12 @@
 #include "catch.hpp"
-#include "orbit.h"
+
+#define private public   // horribly hacky way to access private members
+#define protected public
+
 #include "body.h"
 #include "vector.h"
 #include "const.h"
+#include "orbit.h"
 
 //         test name                                    test group
 TEST_CASE( "test eccentricity is calculated correctly", "[Orbit]" ) {
@@ -355,4 +359,16 @@ TEST_CASE( "test orbit can make a prediction 0s ahead", "[Orbit]" ) {
     REQUIRE( velocity.x == Approx(7320.0).epsilon(0.0001) );
     REQUIRE( velocity.y == Approx(11329.0).epsilon(0.0001) );
     REQUIRE( velocity.z == Approx(-0211.0).epsilon(0.0001) );
+}
+
+TEST_CASE( "test orbit can be copied correctly", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::Orbit orbit_a(body, r, v);
+    kin::Orbit orbit_b = orbit_a;
+
+    REQUIRE( orbit_a.u == orbit_b.u );
+    REQUIRE( orbit_a.a == orbit_b.a );
+    REQUIRE( orbit_a.t == orbit_b.t );
 }
