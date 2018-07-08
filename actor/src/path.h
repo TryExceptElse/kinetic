@@ -29,11 +29,27 @@ class System;
 // --------------------------------------------------------------------
 
 /**
- * Structure containing kinematic information about an object
+ * Structure containing kinematic information about an object.
  */
 struct KinematicData {
     Vector r;
     Vector v;
+};
+
+/**
+ * Structure containing information about an orbit.
+ */
+class OrbitData {
+ public:
+    OrbitData(const Orbit orbit, const Body &body):
+        orbit_(orbit), body_(body) {}
+
+    const Orbit &orbit() const { return orbit_; }
+    const Body &body() const { return body_; }
+
+ private:
+    const Orbit orbit_;
+    const Body &body_;
 };
 
 /**
@@ -130,8 +146,21 @@ class FlightPath {
  public:
     FlightPath(const System &system, const Vector r, const Vector v, double t);
 
-    /** Gets Orbit object for passed point in time since t0 */
+    /** Gets KinematicData for passed point in time since t0 */
     KinematicData Predict(const double time) const;
+
+    /**
+     * Gets OrbitData for passed point in time since t0.
+     *
+     * Returned orbit will not match true trajectory if the passed
+     * body is not the primary influence on the flightpath at
+     * passed time.
+     *
+     * The returned orbit will be highly inaccurate if the passed
+     * body's sphere of influence does not include the flightpath at
+     * the passed time.
+     */
+    OrbitData PredictOrbit(const double time, const Body *body = nullptr) const;
 
     /**
      * Gets pointer to maneuver at passed time or else nullptr.
@@ -291,6 +320,8 @@ class FlightPath {
          */
         virtual KinematicData Predict(const double t) const = 0;
 
+        virtual OrbitData PredictOrbit(const double t) const = 0;
+
         /**
          * Calculates flight path until passed time t or Segment ends.
          */
@@ -303,6 +334,12 @@ class FlightPath {
         const Vector v0_;
         const double t0_;
         mutable CalculationStatus calculation_status_;
+
+        /**
+         * Checks that passed time t is >=0 and does not precede start
+         * of segment.
+         */
+        void CheckPredictionTime(const double t) const;
     };
 
     // ----------------------------------------------------------------
@@ -317,6 +354,7 @@ class FlightPath {
             double t);
 
         KinematicData Predict(const double t) const;
+        OrbitData PredictOrbit(const double t) const;
         CalculationStatus Calculate(const double t) const;
 
      private:
@@ -336,7 +374,9 @@ class FlightPath {
             double t);
 
         KinematicData Predict(const double t) const;
+        OrbitData PredictOrbit(const double t) const;
         CalculationStatus Calculate(const double t) const;
+
      private:
         Orbit orbit_;
         bool calculation_complete_;

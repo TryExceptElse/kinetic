@@ -119,6 +119,23 @@ KinematicData FlightPath::Predict(const double time) const {
     return GetSegment(time).Predict(time);
 }
 
+OrbitData FlightPath::PredictOrbit(
+        const double time, const Body * const body) const {
+    // If passed reference body is null, use body within
+    // sphere of influence.
+    if (body == nullptr) {
+        return GetSegment(time).PredictOrbit(time);
+    } else {
+        // Produce orbit from current system position and velocity.
+        const KinematicData kinematics = Predict(time);
+        // Find position and velocity relative to reference body.
+        const Vector rel_r = kinematics.r - body->PredictSystemPosition(time);
+        const Vector rel_v = kinematics.v - body->PredictSystemVelocity(time);
+        // Produce orbit from relative position, velocity, and body.
+        return OrbitData(Orbit(*body, rel_r, rel_v), *body);
+    }
+}
+
 const Maneuver* FlightPath::FindManeuver(const double t) const {
     if (maneuvers_.size() == 0) {
         return nullptr;
@@ -268,6 +285,20 @@ FlightPath::Segment::Segment(
     v0_(v),
     t0_(t) {}
 
+void FlightPath::Segment::CheckPredictionTime(const double t) const {
+    if (t < 0) {
+        throw std::invalid_argument(
+            "FlightPath::Segment::CheckPredictionTime() : Passed t: " +
+            std::to_string(t));
+    }
+    if (t < t0_) {
+        throw std::invalid_argument(
+            "FlightPath::Segment::CheckPredictionTime() : "
+            "Passed t preceded start time of segment. t: " + std::to_string(t) +
+            "start: " + std::to_string(t0_));
+    }
+}
+
 // ManeuverSegment ----------------------------------------------------
 
 FlightPath::ManeuverSegment::ManeuverSegment(
@@ -281,16 +312,7 @@ FlightPath::ManeuverSegment::ManeuverSegment(
     m0_(maneuver.FindMassAtTime(t)) {}
 
 KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
-    if (t < 0) {
-        throw std::invalid_argument(
-            "FlightPath::ManeuverSegment::Predict() : Passed t: " +
-            std::to_string(t));
-    }
-    if (t < t0_) {
-        throw std::invalid_argument("FlightPath::ManeuverSegment::Predict() : "
-            "Passed t preceded start time of segment. t: " + std::to_string(t) +
-            "start: " + std::to_string(t0_));
-    }
+    CheckPredictionTime(t);
     Calculate(t);
     if (t >= calculation_status_.end_t) {
         throw std::invalid_argument("FlightPath::ManeuverSegment::Predict() : "
@@ -305,6 +327,16 @@ KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
     const Vector r = r0_ + a_ * (std::pow(rel_t, 2) / 2);
     const Vector v = v0_ + a_ * rel_t;
     return {r, v};
+}
+
+OrbitData FlightPath::ManeuverSegment::PredictOrbit(const double t) const {
+    // Predict system-relative position and velocity.
+    const KinematicData kinematics = Predict(t);
+    // Find position and velocity relative to reference body.
+    const Vector rel_r = kinematics.r - primary_body_.PredictSystemPosition(t);
+    const Vector rel_v = kinematics.v - primary_body_.PredictSystemVelocity(t);
+    // Produce and return orbit data.
+    return OrbitData(Orbit(primary_body_, rel_r, rel_v), primary_body_);
 }
 
 FlightPath::CalculationStatus
@@ -387,11 +419,7 @@ FlightPath::BallisticSegment::BallisticSegment(
             orbit_(primary_body_, r, v) {}
 
 KinematicData FlightPath::BallisticSegment::Predict(const double t) const {
-    if (t < t0_) {
-        std::invalid_argument(
-            "FlightPath::ManeuverSegment::Predict() : Passed t < t0: " +
-            std::to_string(t));
-    }
+    CheckPredictionTime(t);
     Orbit prediction = orbit_.Predict(t - t0_);
     KinematicData kinematics;
     kinematics.r = prediction.position() +
@@ -399,6 +427,12 @@ KinematicData FlightPath::BallisticSegment::Predict(const double t) const {
     kinematics.v = prediction.velocity() +
         primary_body_.PredictSystemVelocity(t);
     return kinematics;
+}
+
+OrbitData FlightPath::BallisticSegment::PredictOrbit(const double t) const {
+    CheckPredictionTime(t);
+    const Orbit prediction = orbit_.Predict(t - t0_);
+    return OrbitData(prediction, primary_body_);
 }
 
 FlightPath::CalculationStatus

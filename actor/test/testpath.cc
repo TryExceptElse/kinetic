@@ -183,7 +183,25 @@ TEST_CASE( "test path maneuver increases velocity", "[Path]" ) {
     const kin::Vector v1 = prediction1.v;
 
     // New velocity should be increased by burn DV.
-    REQUIRE( v1.len() == Approx(v0.len() + dv).epsilon(0.01) );
+    REQUIRE( v1.len() == Approx(v0.len() + dv).epsilon(0.002) );
+}
+
+
+TEST_CASE( "test orbit prediction has correct primary influence", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+
+    // Create Initial Orbit
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+    const double half_orbit_t = 374942509.78053558 / 2;
+
+    // Make prediction
+    const kin::OrbitData orbit_prediction = path.PredictOrbit(half_orbit_t);
+
+    REQUIRE( orbit_prediction.body().id() == system.root().id() );
 }
 
 

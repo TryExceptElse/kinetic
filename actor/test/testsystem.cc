@@ -34,3 +34,5 @@ TEST_CASE( "test system stores id if one passed", "[System]" ) {
 
     REQUIRE( system.id() == system_id );
 }
+
+// TODO: Add system position + velocity tests.
