@@ -1,4 +1,4 @@
-from .vector cimport wrap_vector
+from .vector cimport PyVector
 
 
 cdef class PyActor:
@@ -12,16 +12,16 @@ cdef class PyActor:
 
     @property
     def local_position(self):
-        return wrap_vector(self._actor.get().local_position())
+        return PyVector.cp(self._actor.get().local_position())
 
     @property
     def local_velocity(self):
-        return wrap_vector(self._actor.get().local_velocity())
+        return PyVector.cp(self._actor.get().local_velocity())
 
     @property
     def world_position(self):
-        return wrap_vector(self._actor.get().world_position())
+        return PyVector.cp(self._actor.get().world_position())
 
     @property
     def world_velocity(self):
-        return wrap_vector(self._actor.get().world_velocity())
+        return PyVector.cp(self._actor.get().world_velocity())

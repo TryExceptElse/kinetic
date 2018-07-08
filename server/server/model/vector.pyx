@@ -7,7 +7,13 @@ cdef class PyVector:
         self._vector.y = y
         self._vector.z = z
 
-    cdef inline Vector get_vector(self):
+    @staticmethod
+    cdef PyVector cp(Vector vector):
+        cdef PyVector wrapper = PyVector
+        wrapper._vector = vector
+        return wrapper
+
+    cdef inline Vector val(self):
         return self._vector
 
     cpdef double sqlen(self) except -1.0:
@@ -39,8 +45,3 @@ cdef class PyVector:
     @z.setter
     def z(self, value):
         self._vector.z = value
-
-
-cdef PyVector wrap_vector(Vector vector):
-    cdef PyVector wrapper = PyVector
-    wrapper._vector = vector

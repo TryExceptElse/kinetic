@@ -19,7 +19,7 @@ class Body(GameObject):
     @property
     def mu(self):
         """
-
+        Returns gravitational constant * mass of body.
         :return:
         """
         return const.G * self.mass

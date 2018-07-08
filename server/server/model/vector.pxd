@@ -13,8 +13,10 @@ cdef extern from "vector.h" namespace "kin" nogil:
 cdef class PyVector:
     cdef Vector _vector
 
-    cdef inline Vector get_vector(self)
+    @staticmethod
+    cdef PyVector cp(Vector vector)
+
+    cdef inline Vector val(self)
+
     cpdef double sqlen(self) except -1.0
     cpdef double len(self) except -1.0
-
-cdef PyVector wrap_vector(Vector vector)
