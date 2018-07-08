@@ -15,6 +15,12 @@ from server.model.model import GameModel
 Protocol = websockets.WebSocketServerProtocol
 HandlerDict = ty.Dict[ty.Type, ty.Callable[[Protocol, e.GameMsg], ty.Any]]
 
+# cython type compatability
+try:
+    unicode
+except NameError:
+    unicode = str
+
 
 def handler(msg_type: ty.Type):
     """

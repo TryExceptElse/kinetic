@@ -16,10 +16,10 @@ setup(
     requires=['websockets', 'Cython'],
 
     ext_modules=cythonize([
-        Extension(
-            name='server.server',
-            sources=['server/server.py']
-        ),
+        # Extension(
+        #     name='server.server',
+        #     sources=['server/server.py']
+        # ),
         Extension(
             name='server.event',
             sources=['server/event.py']
