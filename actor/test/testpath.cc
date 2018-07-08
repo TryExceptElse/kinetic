@@ -12,6 +12,9 @@
 #include "path.h"
 
 
+// FLIGHT PATH --------------------------------------------------------
+
+
 //         test name                  test group
 TEST_CASE( "test path with no maneuvers can be calculated", "[Path]" ) {
     std::unique_ptr<kin::Body> body =
@@ -67,6 +70,51 @@ TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     REQUIRE( position2.x != Approx(-712305324741.15112).epsilon(0.01) );
     REQUIRE( position2.y != Approx(365151451881.22858).epsilon(0.01) );
     REQUIRE( position2.z != Approx(14442203602.998617).epsilon(0.01) );
+}
+
+
+TEST_CASE( "test add method adds maneuver to path", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+
+    // Create Initial Orbit
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+    const double half_orbit_t = 374942509.78053558 / 2;
+
+    // Add maneuver
+    const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
+    const double dv = 2000.0;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            dv,  // DV
+            performance,
+            150.0,  // m0
+            half_orbit_t);  // t0
+    path.Add(maneuver);
+
+    REQUIRE( path.maneuvers_.size() == 1 );
+    REQUIRE( path.maneuvers_.begin()->second->t0() == half_orbit_t );
+}
+
+
+TEST_CASE( "test path calc continues incomplete groups", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    const kin::FlightPath path(system, r, v, 0);
+    // predict orbit of 1/2 period from t0.
+    const double t1 = 374942509.78053558 / 2;
+    const double tf = t1 * 2;
+    path.Calculate(t1);
+    path.Calculate(tf);
+
+    // There should be only a single group.
+    REQUIRE( path.cache_.groups.size() == 1 );
 }
 
 
@@ -138,6 +186,10 @@ TEST_CASE( "test path maneuver increases velocity", "[Path]" ) {
     REQUIRE( v1.len() == Approx(v0.len() + dv) );
 }
 
+
+// BALLISTIC SEGMENT --------------------------------------------------
+
+
 TEST_CASE( "test segment can predict half orbit", "[BallisticSegment]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
@@ -189,6 +241,46 @@ TEST_CASE( "test segment group can predict half orbit", "[BallisticSegment]" ) {
     REQUIRE( result.r.y == Approx(365151451881.22858).epsilon(0.0001) );
     REQUIRE( result.r.z == Approx(14442203602.998617).epsilon(0.0001) );
 }
+
+
+TEST_CASE( "test calculate does not overrun group tf", "[BallisticSegment]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 1000000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    const double tf = half_orbit + t0;
+
+    // Create BallisticSegmentGroup
+    kin::FlightPath::BallisticSegmentGroup segment_group(system, r, v, t0, tf);
+    const kin::FlightPath::CalculationStatus status =
+            segment_group.Calculate(tf);
+    REQUIRE( status.end_t == tf );
+}
+
+
+TEST_CASE( "test calc marks incomplete groups", "[BallisticSegment]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 1000000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    const double tf = half_orbit + t0;
+
+    // Create BallisticSegmentGroup
+    kin::FlightPath::BallisticSegmentGroup segment_group(system, r, v, t0);
+    const kin::FlightPath::CalculationStatus status =
+            segment_group.Calculate(tf);
+    REQUIRE( status.incomplete_element == true );
+}
+
+
+// MANEUVER -----------------------------------------------------------
+
 
 TEST_CASE( "test prograde thrust vector is calculated", "[Maneuver]" ) {
     const kin::Body ref(kin::G * 5.972e24, 6371000.0);
@@ -359,6 +451,10 @@ TEST_CASE( "test maneuver has correct t1", "[Maneuver]" ) {
             30);  // t0
     REQUIRE( maneuver.t1() == Approx(37.5).epsilon(0.0001) );
 }
+
+
+// --------------------------------------------------------------------
+
 
 TEST_CASE( "test performance has correct flow rate", "[PerformanceData]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust

@@ -135,6 +135,18 @@ const Maneuver* FlightPath::FindManeuver(const double t) const {
     return preceding_maneuver.t1() <= t ? nullptr : &preceding_maneuver;
 }
 
+const Maneuver* FlightPath::FindNextManeuver(const double t) const {
+    if (maneuvers_.size() == 0) {
+        return nullptr;
+    }
+    auto following_iterator = maneuvers_.upper_bound(t);
+    // If no following iterator exists, return nullptr
+    if (following_iterator == maneuvers_.end()) {
+        return nullptr;
+    }
+    return following_iterator->second.get();
+}
+
 void FlightPath::Add(const Maneuver &maneuver) {
     // Check that maneuver begins after all existing maneuvers
     // have ended.
@@ -187,7 +199,7 @@ void FlightPath::Calculate(const double t) const {
     // Add new groups and Calculate() them until end_t extends past
     // time t.
     while (cache_.status.end_t <= t) {
-        // get maneuver (or non-maneuver) that new SegmentGroup will
+        // get maneuver (if any) that new SegmentGroup will
         // correspond with.
         const Maneuver * const maneuver = FindManeuver(cache_.status.end_t);
         const Vector r = cache_.status.r;
@@ -195,8 +207,12 @@ void FlightPath::Calculate(const double t) const {
         const double group_t = cache_.status.end_t;
         std::unique_ptr<SegmentGroup> group;
         if (maneuver == nullptr) {
+            const Maneuver * const next_maneuver = FindNextManeuver(
+                    cache_.status.end_t);
+            const double group_tf = next_maneuver == nullptr ?
+                    -1.0 : next_maneuver->t0();
             group = std::make_unique<BallisticSegmentGroup>(
-                system_, r, v, group_t);
+                system_, r, v, group_t, group_tf);
         } else {
             group = std::make_unique<ManeuverSegmentGroup>(
                 system_, maneuver, r, v, group_t);
@@ -301,7 +317,8 @@ FlightPath::CalculationStatus
     // Duration is determined by arbitrary limits, determined by ratio
     // of segment duration to orbital period, and ratio of segment
     // duration to duration required to change actor mass by a
-    // set amount.
+    // set amount. In addition, duration is also limited by the end
+    // time of the maneuver.
     //
     // Acceleration due to thrust is determined by the acceleration at
     // the mean mass of the actor over the duration of the segment, and
@@ -331,7 +348,7 @@ FlightPath::CalculationStatus
     // Use smaller of the two duration limits.
     const double duration = std::min(
         mass_limited_duration, period_limited_duration);
-    const double tf = t0_ + duration;
+    const double tf = std::min(t0_ + duration, maneuver_.t1());
     // Approximate average acceleration over duration of step.
     const double a0_mag = maneuver_.performance().thrust() / m0_;
     const double mf = maneuver_.FindMassAtTime(tf);
@@ -482,11 +499,16 @@ FlightPath::CalculationStatus
 
 FlightPath::SegmentGroup::SegmentGroup(
         const System &system, const Maneuver * const maneuver,
-        const Vector r, const Vector v, double t):
-        system_(system), maneuver_(maneuver), r_(r), v_(v), t_(t) {
+        const Vector r, const Vector v, const double t, const double tf):
+        system_(system), maneuver_(maneuver), r_(r), v_(v), t_(t), tf_(tf) {
     if (t < 0) {
         throw std::invalid_argument("SegmentGroup::SegmentGroup() : "
             "Passed value t (" + std::to_string(t) + ") was < 0");
+    }
+    if (tf != -1.0 && tf <= t) {
+        throw std::invalid_argument("SegmentGroup::SegmentGroup() : "
+            "Passed value tf (" + std::to_string(t) + ") was < t "
+            "(" + std::to_string(tf) + ")");
     }
     if (r.sqlen() == 0.0) {
         throw std::invalid_argument("SegmentGroup::SegmentGroup() : "
@@ -519,22 +541,33 @@ const FlightPath::Segment&
 }
 
 FlightPath::CalculationStatus
-        FlightPath::SegmentGroup::Calculate(const double t) {
+        FlightPath::SegmentGroup::Calculate(double t) {
+    // Note: This method is re-entrant but not thread-safe.
+
+    // Check that passed time t is within bounds.
+    if (t < t_) {
+        throw std::invalid_argument("SegmentGroup::Calculate() : "
+            "Passed value t (" + std::to_string(t) + ") was < group t0 ("
+            + std::to_string(t_) + ")");
+    }
+    // Return early if calculation of segment group has already
+    // surpassed t.
     if (t < calculation_status_.end_t) {
         return calculation_status_;
+    }
+    if (tf_ != -1.0 && t > tf_) {
+        t = tf_;
     }
     // If the last segment has not finished being calculated,
     // continue calculating it until time t is reached or segment ends.
     if (calculation_status_.incomplete_element) {
         Segment &last_segment = *segments_.rbegin()->second;
         calculation_status_ = last_segment.Calculate(t);
-        if (calculation_status_.end_t > t) {
-            return calculation_status_;
-        }
     }
     // Progress calculation of flight path until time t is reached or
     // SegmentGroup ends.
-    while (calculation_status_.end_t <= t) {
+    while (calculation_status_.end_t <= t &&
+            (tf_ == -1 || calculation_status_.end_t < tf_)) {
         const Vector r = calculation_status_.r;
         const Vector v = calculation_status_.v;
         const double segment_time = calculation_status_.end_t;
@@ -547,6 +580,17 @@ FlightPath::CalculationStatus
         }
         segments_[segment_time] = std::move(segment);
     }
+    // Trim calculation status if calculation overran group end time.
+    if (tf_ != -1.0 && calculation_status_.end_t > tf_) {
+        // Get kinematic data for final time tf.
+        const KinematicData tf_kinematics = Predict(tf_);
+        calculation_status_ = CalculationStatus(
+                tf_kinematics.r,
+                tf_kinematics.v,
+                tf_);
+    } else if (tf_ == -1.0 || calculation_status_.end_t < tf_) {
+        calculation_status_.incomplete_element = true;
+    }
     return calculation_status_;
 }
 
@@ -555,18 +599,21 @@ FlightPath::CalculationStatus
 FlightPath::ManeuverSegmentGroup::ManeuverSegmentGroup(
         const System &system,
         const Maneuver * const maneuver,
-        const Vector r, const Vector v, double t):
-            SegmentGroup(system, maneuver, r, v, t) {
+        const Vector r, const Vector v, const double t):
+            SegmentGroup(system, maneuver, r, v, t, maneuver->t1()) {
     // validate input
     if (maneuver == nullptr) {
         throw std::invalid_argument(
             "ManeuverSegmentGroup::ManeuverSegmentGroup() : "
             "Passed maneuver was null");
     }
+    // Since comparing floating point numbers may not always work,
+    // Check if maneuver t0 and group t0 are almost equal.
     if (maneuver->t0() != t) {
         throw std::invalid_argument(
+            "ManeuverSegmentGroup::ManeuverSegmentGroup() : "
             "t: " + std::to_string(t) + " does not match maneuver t0: " +
-            std::to_string(t));
+            std::to_string(maneuver->t0()));
     }
 }
 
@@ -580,8 +627,9 @@ std::unique_ptr<FlightPath::Segment>
 // BallisticSegmentGroup ----------------------------------------------
 
 FlightPath::BallisticSegmentGroup::BallisticSegmentGroup(
-        const System &system, const Vector r, const Vector v, double t):
-            SegmentGroup(system, nullptr, r, v, t) {}
+        const System &system,
+        const Vector r, const Vector v, const double t, const double tf):
+            SegmentGroup(system, nullptr, r, v, t, tf) {}
 
 std::unique_ptr<FlightPath::Segment>
         FlightPath::BallisticSegmentGroup::CreateSegment(

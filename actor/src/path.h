@@ -136,10 +136,24 @@ class FlightPath {
     /**
      * Gets pointer to maneuver at passed time or else nullptr.
      * Maneuver start time is inclusive, and end time is not.
+     *
      * If maneuver A ends at time 5, and time 5 is passed as an
      * argument, it will not be returned by this method.
      */
     const Maneuver *FindManeuver(const double t) const;
+
+    /**
+     * Gets pointer to next maneuver with a start time following passed
+     * time, or nullptr if no following maneuver exists.
+     *
+     * If the passed time is contained within a maneuver, a pointer to
+     * the next maneuver will be returned if one exists, otherwise
+     * a nullptr will be returned.
+     *
+     * If maneuver A starts at time 5, and 5 is passed as an argument,
+     * maneuver A will not be returned by this method.
+     */
+    const Maneuver *FindNextManeuver(const double t) const;
 
     /**
      * Adds a maneuver to FlightPath at the specified time.
@@ -337,7 +351,7 @@ class FlightPath {
     class SegmentGroup {
      public:
         SegmentGroup(const System &system, const Maneuver * const maneuver,
-            const Vector r, const Vector v, double t);
+            const Vector r, const Vector v, double t, double tf = -1.0);
 
         /** Gets Orbit object for passed time relative to universe t0. */
         KinematicData Predict(const double t) const;
@@ -363,6 +377,7 @@ class FlightPath {
         const Vector r_;
         const Vector v_;
         const double t_;
+        const double tf_;
         std::map<double, std::unique_ptr<Segment> > segments_;
         CalculationStatus calculation_status_;
 
@@ -395,7 +410,7 @@ class FlightPath {
     class BallisticSegmentGroup: public SegmentGroup {
      public:
         BallisticSegmentGroup(const System &system,
-            const Vector r, const Vector v, double t);
+            const Vector r, const Vector v, double t, double tf = -1.0);
 
         /**
          * Constructs new segment to be added to group.
