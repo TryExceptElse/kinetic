@@ -42,7 +42,7 @@ const Body& System::FindPrimaryInfluence(const Vector r, const double t) const {
     // parent do not have overlapping spheres of influence.
     const Body *primary = root_.get();
     while (1) {
-        for (const BodyIdPair &child_pair : root_->children()) {
+        for (const BodyIdPair &child_pair : primary->children()) {
             const Body &child = *child_pair.second;
             // check if position is within child sphere of influence
             double sphere_radius = child.sphere_of_influence();
