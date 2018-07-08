@@ -314,6 +314,7 @@ FlightPath::ManeuverSegment::ManeuverSegment(
 KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
     CheckPredictionTime(t);
     Calculate(t);
+    // CheckPredictionTime only checks that t does not precede segment.
     if (t >= calculation_status_.end_t) {
         throw std::invalid_argument("FlightPath::ManeuverSegment::Predict() : "
             "Passed t was >= end time of segment. t: " + std::to_string(t) +
@@ -419,8 +420,11 @@ FlightPath::BallisticSegment::BallisticSegment(
             orbit_(primary_body_, r, v) {}
 
 KinematicData FlightPath::BallisticSegment::Predict(const double t) const {
+    // Ensure that t does not come before segment.
     CheckPredictionTime(t);
     Orbit prediction = orbit_.Predict(t - t0_);
+    // Produce system-relative kinematics by adding orbit
+    // r and v, to body's system-relative r and v.
     KinematicData kinematics;
     kinematics.r = prediction.position() +
         primary_body_.PredictSystemPosition(t);
