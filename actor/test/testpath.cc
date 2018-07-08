@@ -183,7 +183,7 @@ TEST_CASE( "test path maneuver increases velocity", "[Path]" ) {
     const kin::Vector v1 = prediction1.v;
 
     // New velocity should be increased by burn DV.
-    REQUIRE( v1.len() == Approx(v0.len() + dv) );
+    REQUIRE( v1.len() == Approx(v0.len() + dv).epsilon(0.01) );
 }
 
 
