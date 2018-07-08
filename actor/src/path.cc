@@ -69,7 +69,7 @@ double Maneuver::FindMassAtTime(const double t) const {
             " outside Maneuver time range: " +
             std::to_string(t0_) + " to " + std::to_string(t1()));
     }
-    // find mass at passed t by
+    // Find mass at passed t by subtracting expended mass from m0.
     return m0_ - (t - t0_) * performance_.flow_rate();
 }
 
@@ -108,6 +108,8 @@ FlightPath::FlightPath(
         throw std::invalid_argument("FlightPath::FlightPath() : "
             "Passed value t (" + std::to_string(t) + ") was < 0");
     }
+    // If position is 0, 0, 0, then orbits cannot be
+    // properly calculated.
     if (r.sqlen() == 0.0) {
         throw std::invalid_argument("FlightPath::FlightPath() : "
             "Passed position r was [0,0,0]");
@@ -185,6 +187,7 @@ bool FlightPath::Clear() {
 }
 
 bool FlightPath::ClearAfter(const double t) {
+    // Clear maneuvers that begin after, but not at time t.
     std::map<double, std::unique_ptr<Maneuver> >::iterator first =
         maneuvers_.upper_bound(t);
     maneuvers_.erase(first, maneuvers_.end());
@@ -265,6 +268,7 @@ FlightPath::SegmentGroup* FlightPath::last_group() const {
 }
 
 FlightPath::CalculationStatus FlightPath::calculation_status() const {
+    // If cache has not yet been initialized, do that now.
     if (cache_.status.end_t == -1.0) {
         cache_.status.end_t = t0_;
         cache_.status.r = r0_;
