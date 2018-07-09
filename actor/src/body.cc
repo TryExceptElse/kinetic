@@ -6,19 +6,19 @@
 
 namespace kin {
 
-
-Body::Body(const double GM, const double r): Body(sole::uuid4().str(), GM, r) {}
-
-Body::Body(const double GM, const double r, std::unique_ptr<Orbit> orbit):
-        Body(sole::uuid4().str(), GM, r) {}
-
-Body::Body(const std::string id, const double GM, const double r):
-        GM_(GM), r_(r), id_(id), parent_(nullptr) {}
-
-Body::Body(const std::string id, const double GM, const double r,
-    std::unique_ptr<Orbit> orbit):
-        Body(id, GM, r) {
-    orbit_ = std::move(orbit);
+Body::Body(const double GM, const double r, const std::string id,
+        Body * const parent, Orbit * const orbit):
+            GM_(GM), r_(r), id_(id.empty() ? sole::uuid4().str() : id) {
+    if (parent == nullptr) {
+        parent_ = nullptr;
+    } else {
+        if (orbit == nullptr) {
+            throw std::invalid_argument("Body::Body() : "
+                "If parent body is passed, so must an orbit.");
+        }
+        parent_ = parent;
+        orbit_ = std::make_unique<Orbit>(*orbit);
+    }
 }
 
 bool Body::AddChild(std::unique_ptr<Body> child) {

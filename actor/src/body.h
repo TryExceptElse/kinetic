@@ -38,7 +38,7 @@ using BodyIdPair = std::pair<const std::string, std::unique_ptr<Body> >;
 
 class Body {
  protected:
-    std::string id_;
+    const std::string id_;
     std::unique_ptr<Orbit> orbit_;
     Body *parent_;
     BodyMap children_;
@@ -46,11 +46,14 @@ class Body {
     const double r_;
 
  public:
-    Body(const double GM, const double r);
-    Body(const double GM, const double r, std::unique_ptr<Orbit> orbit);
-    Body(const std::string id, const double GM, const double r);
+    Body(const double GM, const double r,
+        const std::string id = "",
+        Body *parent = nullptr, Orbit *orbit = nullptr);
+
+    // Alternate constructor taking a required name arg first.
     Body(const std::string id, const double GM, const double r,
-         std::unique_ptr<Orbit> orbit);
+        Body *parent = nullptr, Orbit *orbit = nullptr):
+            Body(GM, r, id, parent, orbit) {}
 
     // methods
 
