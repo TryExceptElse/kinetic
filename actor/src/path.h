@@ -74,7 +74,6 @@ class PerformanceData {
 // https://en.wikipedia.org/wiki/Tsiolkovsky_rocket_equation
 class Maneuver {
  public:
-
     /**
      * Enum defining the type of maneuver being performed.
      * This will determine the direction of acceleration over time.

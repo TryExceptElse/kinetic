@@ -85,5 +85,3 @@ cdef class PyManeuver:
     cdef inline Maneuver* get(self)
 
     cpdef double find_mass_at_time(self, double t)
-
-    # TODO:

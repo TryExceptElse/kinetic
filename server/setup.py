@@ -57,6 +57,20 @@ setup(
             include_dirs=DEFAULT_INCLUDES,
             extra_objects=DEFAULT_OBJECTS,
             language='c++'
+        ),
+        Extension(
+            name='server.model.body',
+            sources=['server/model/body.pyx'],
+            include_dirs=DEFAULT_INCLUDES,
+            extra_objects=DEFAULT_OBJECTS,
+            language='c++'
+        ),
+        Extension(
+            name='server.model.orbit',
+            sources=['server/model/orbit.pyx'],
+            include_dirs=DEFAULT_INCLUDES,
+            extra_objects=DEFAULT_OBJECTS,
+            language='c++'
         )
     ])
 )
