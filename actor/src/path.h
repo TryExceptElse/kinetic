@@ -86,7 +86,7 @@ class Maneuver {
 
     Maneuver(ManeuverType type,
              double dv,
-             const PerformanceData data,
+             const PerformanceData performance,
              double m0,
              double t0);
 
@@ -96,7 +96,7 @@ class Maneuver {
      */
     Maneuver(const Vector vector,
              double dv,
-             const PerformanceData data,
+             const PerformanceData performance,
              double m0,
              double t0);
 
