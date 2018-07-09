@@ -3,12 +3,23 @@ cimport libcpp.memory as mem
 from vector cimport Vector, PyVector
 
 
+cdef extern from "path.h" namespace "kin::Maneuver" nogil:
+    enum ManeuverType:
+        kPrograde,
+        kRetrograde,
+        kNormal,
+        kAntiNormal,
+        kRadial,
+        kAntiRadial,
+        kFixed
+
+
 cdef extern from "path.h" namespace "kin" nogil:
-    cdef struct KinematicData:
+    struct KinematicData:
         Vector r, v
 
 
-    cdef cppclass PerformanceData:
+    cppclass PerformanceData:
         PerformanceData(double ve, double thrust)
 
         # Accessors.
@@ -17,24 +28,34 @@ cdef extern from "path.h" namespace "kin" nogil:
         double flow_rate() const
 
 
-    cdef cppclass Maneuver:
-        enum ManeuverType:
-            kPrograde, kRetrograde, kNormal, kAntiNormal, kRadial, kAntiRadial,
-            kFixed
+    cppclass Maneuver:
 
         # Constructors
 
         Maneuver(ManeuverType type,
                  double dv,
-                 const PerformanceData data,
+                 PerformanceData performance,
                  double m0,
                  double t0)
 
-        Maneuver(const Vector vector,
+        Maneuver(Vector vector,
                  double dv,
-                 const PerformanceData data,
+                 PerformanceData performance,
                  double m0,
-                 double t0);
+                 double t0)
+
+        ManeuverType type() const
+        double dv() const
+        double m0() const
+        double m1() const
+        double t0() const
+        double t1() const  # end time of maneuver.
+        const PerformanceData& performance() const
+        double duration() const
+        double mass_fraction() const  # mass ratio 0-1 which is expended.
+        double expended_mass() const  # propellant mass expended.
+
+        double FindMassAtTime(const double t) const
 
 
 cdef class PyKinematicData:
@@ -53,3 +74,16 @@ cdef class PyPerformanceData:
 
     @staticmethod
     cdef PyPerformanceData cp(PerformanceData data)
+
+
+cdef class PyManeuver:
+    cdef mem.unique_ptr[Maneuver] _maneuver
+
+    @staticmethod
+    cdef PyManeuver cp(Maneuver maneuver)
+
+    cdef inline Maneuver* get(self)
+
+    cpdef double find_mass_at_time(self, double t)
+
+    # TODO:

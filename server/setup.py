@@ -1,3 +1,4 @@
+import sys
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 from os import path
@@ -6,8 +7,18 @@ SERVER_PATH = path.abspath(path.dirname(__file__))
 ROOT_PATH = path.abspath(path.join(SERVER_PATH, '..'))
 
 DEFAULT_INCLUDES = [path.join(ROOT_PATH, 'actor', 'src')]
-DEFAULT_LIBS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
-                          'actor', 'static')]
+
+
+def static_lib_name(base_name: str) -> str:
+    if sys.platform == 'win32':
+        raise OSError('win32 not supported currently.')
+    else:
+        return f'lib{base_name}.a'
+
+
+DEFAULT_OBJECTS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
+                             'actor', 'static', static_lib_name('actor'))]
+
 
 setup(
     name='kinetic_server',
@@ -32,21 +43,19 @@ setup(
             name='server.model.actor',
             sources=['server/model/actor.pyx'],
             include_dirs=DEFAULT_INCLUDES,
-            library_dirs=DEFAULT_LIBS,
             language="c++",
         ),
         Extension(
             name='server.model.vector',
             sources=['server/model/vector.pyx'],
             include_dirs=DEFAULT_INCLUDES,
-            library_dirs=DEFAULT_LIBS,
             language="c++",
         ),
         Extension(
             name='server.model.path',
             sources=['server/model/path.pyx'],
             include_dirs=DEFAULT_INCLUDES,
-            library_dirs=DEFAULT_LIBS,
+            extra_objects=DEFAULT_OBJECTS,
             language='c++'
         )
     ])

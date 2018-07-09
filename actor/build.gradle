@@ -22,7 +22,7 @@ model {
                 }
             }
             binaries.all {
-                cppCompiler.args '-O0', '-g', '-Wextra'
+                cppCompiler.args '-O0', '-g', '-Wextra', '-fPIC'
             }
             binaries.withType(SharedLibraryBinary) { binary ->
                 buildable = false
