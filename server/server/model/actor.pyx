@@ -28,5 +28,11 @@ cdef class PyActor:
     cdef Actor* get(self):
         return self._actor
 
-#    cpdef PyKinematicData predict(self, double t):
-#        return PyKinematicData.cp(self._actor.Predict(t))
+    cpdef PyKinematicData predict(self, double t):
+        return PyKinematicData.cp(self._actor.Predict(t))
+
+    # Getters
+
+    @property
+    def id(self) -> str:
+        return self._actor.id()

@@ -1,11 +1,14 @@
 #include "actor.h"
 
+#include "sole.hpp"
+
 namespace kin {
+
 
 Actor::Actor(): Actor(Vector(0, 0, 0), Vector(0, 0, 0)) {}
 
 Actor::Actor(const Vector r, const Vector v):
-        universe_(nullptr) {}
+        universe_(nullptr), id_(sole::uuid4().str()) {}
 
 Actor::Actor(const std::string &json): universe_(nullptr) {}
 

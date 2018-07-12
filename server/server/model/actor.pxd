@@ -25,4 +25,4 @@ cdef class PyActor:
 
     cdef Actor* get(self)
 
-    # cpdef PyKinematicData predict(self, double t)
+    cpdef PyKinematicData predict(self, double t)
