@@ -60,5 +60,29 @@ const Body& System::FindPrimaryInfluence(const Vector r, const double t) const {
     return *primary;
 }
 
+bool System::AddActor(Actor *actor) {
+    // TODO
+    // Check that actor is in universe
+    // If actor already has a system, clear actor's system ref +
+    // clear system's stored actor ID
+    // Add actor to system.
+
+    // Returns pair of iterator, bool
+    auto result = actor_ids.insert(actor->id());
+    if (result.second) {
+        throw std::runtime_error("System::AddActor : "
+            "ID Already present in system");
+    }
+}
+
 
 }  // namespace kin
+
+extern "C" kin::System* kin_NewSystemFromRoot(kin::Body *root) {
+    return new kin::System(std::move(std::unique_ptr<kin::Body>(root)));
+}
+
+extern "C" kin::System* kin_NewSystemFromIdAndRoot(
+        char *id, kin::Body *root) {
+    return new kin::System(id, std::move(std::unique_ptr<kin::Body>(root)));
+}

@@ -1,4 +1,4 @@
-from .vector cimport PyVector
+from .vector cimport Vector, PyVector
 
 
 cdef class PyActor:
@@ -6,22 +6,27 @@ cdef class PyActor:
     Wraps Actor cpp class
     """
 
-    def __init__(self, new=True):
-        if new:
-            self._actor = make_shared[Actor]()
+    def __cinit__(self, **kwargs) -> None:
+        if 'ptr' in kwargs:
+            self._actor = <Actor *><long long>kwargs.get('ptr')
+            self.owning = False
+            return
+        self.owning = True
+        # TODO: support additional construction methods.
+        # TODO: store reference to system.
+        self._actor = new Actor()
 
-    @property
-    def local_position(self):
-        return PyVector.cp(self._actor.get().local_position())
+    def __dealloc__(self) -> None:
+        if self.owning:
+            del self._actor
+            self._actor = NULL
 
-    @property
-    def local_velocity(self):
-        return PyVector.cp(self._actor.get().local_velocity())
+    @staticmethod
+    cdef PyActor wrap(Actor* actor):
+        return PyActor(ptr=<long long>actor)
 
-    @property
-    def world_position(self):
-        return PyVector.cp(self._actor.get().world_position())
+    cdef Actor* get(self):
+        return self._actor
 
-    @property
-    def world_velocity(self):
-        return PyVector.cp(self._actor.get().world_velocity())
+#    cpdef PyKinematicData predict(self, double t):
+#        return PyKinematicData.cp(self._actor.Predict(t))

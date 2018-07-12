@@ -16,7 +16,8 @@ cdef class PyBody:
         cdef Body* c_parent
         cdef Orbit* c_orbit
         self._str_id = ''
-        if isinstance(kwargs.get('ptr', None), int):
+        self.system = None
+        if 'ptr' in kwargs:
             self._body = <Body *><long long>kwargs['ptr']
             self.owning = False
             return

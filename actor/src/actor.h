@@ -37,11 +37,11 @@ class Actor {
     Actor(Universe *universe, const Vector r, const Vector v);
     Actor(Universe *universe, const std::string &json);
 
+    // General Methods
+    KinematicData Predict(double t) const;
+
+    // Getters
     const std::string& id() const { return id_; }
-    Vector local_position() const;
-    Vector local_velocity() const;
-    Vector world_position() const;
-    Vector world_velocity() const;
     const FlightPath& path() const { return *path_; }
  private:
     std::string id_;

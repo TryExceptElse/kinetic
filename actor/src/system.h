@@ -39,11 +39,11 @@ class System {
      * passed position vector.
      */
     const Body& FindPrimaryInfluence(const Vector r, double t) const;
-    void AddActor(Actor *actor);
+    bool AddActor(Actor *actor);
 
     // getters
     Vector v() const { return v_; }
-    const Body& root() const { return *root_; }
+    Body& root() const { return *root_; }
     const std::string id() const { return id_; }
  private:
     std::string id_;
@@ -59,5 +59,12 @@ using SystemMap = std::unordered_map<std::string, std::unique_ptr<System> >;
 
 
 }  // namespace kin
+
+// Wrapper helper: intended to help languages that do not support
+// move semantics.
+// TODO: relocate
+extern "C" kin::System* kin_NewSystemFromRoot(kin::Body *root);
+extern "C" kin::System* kin_NewSystemFromIdAndRoot(
+        char *id, kin::Body *root);
 
 #endif  // ACTOR_SRC_SYSTEM_H_

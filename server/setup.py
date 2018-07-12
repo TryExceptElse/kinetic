@@ -19,6 +19,8 @@ def static_lib_name(base_name: str) -> str:
 DEFAULT_OBJECTS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
                              'actor', 'static', static_lib_name('actor'))]
 
+DEFAULT_COMPILER_ARGS = ['-O3', '-g']
+
 
 setup(
     name='kinetic_server',
@@ -43,12 +45,15 @@ setup(
             name='server.model.actor',
             sources=['server/model/actor.pyx'],
             include_dirs=DEFAULT_INCLUDES,
+            extra_objects=DEFAULT_OBJECTS,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
             language="c++",
         ),
         Extension(
             name='server.model.vector',
             sources=['server/model/vector.pyx'],
             include_dirs=DEFAULT_INCLUDES,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
             language="c++",
         ),
         Extension(
@@ -56,6 +61,7 @@ setup(
             sources=['server/model/path.pyx'],
             include_dirs=DEFAULT_INCLUDES,
             extra_objects=DEFAULT_OBJECTS,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
             language='c++'
         ),
         Extension(
@@ -63,6 +69,7 @@ setup(
             sources=['server/model/body.pyx'],
             include_dirs=DEFAULT_INCLUDES,
             extra_objects=DEFAULT_OBJECTS,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
             language='c++'
         ),
         Extension(
@@ -70,7 +77,16 @@ setup(
             sources=['server/model/orbit.pyx'],
             include_dirs=DEFAULT_INCLUDES,
             extra_objects=DEFAULT_OBJECTS,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
+            language='c++'
+        ),
+        Extension(
+            name='server.model.system',
+            sources=['server/model/system.pyx'],
+            include_dirs=DEFAULT_INCLUDES,
+            extra_objects=DEFAULT_OBJECTS,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
             language='c++'
         )
-    ])
+    ], gdb_debug=True)
 )

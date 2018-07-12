@@ -17,5 +17,14 @@ Actor::Actor(Universe *universe, const std::string &json) {
     // todo: parse json
 }
 
+KinematicData Actor::Predict(const double t) const {
+    // If path is null, return zero'd kinematic data.
+    if (path_.get() == nullptr) {
+        return KinematicData();
+    }
+    // Otherwise check path.
+    return path_->Predict(t);
+}
+
 
 }  // namespace kin

@@ -5,6 +5,7 @@ from libcpp.unordered_map cimport unordered_map
 
 from server.model.orbit cimport Orbit, PyOrbit
 from server.model.vector cimport Vector, PyVector
+from server.model.system cimport System, PySystem
 
 
 cdef extern from "body.h" namespace "kin" nogil:
@@ -37,11 +38,12 @@ cdef extern from "body.h" namespace "kin" nogil:
 cdef class PyBody:
     cdef Body* _body
     cdef bool owning
+    cdef PySystem system  # Reference is kept to prevent out-of-order deletion.
     cdef str _str_id
 
     @staticmethod
     cdef inline PyBody wrap(Body* body):
-        return PyBody(<long long>body)
+        return PyBody(ptr=<long long>body)
 
     cdef inline Body* get(self):
         return self._body
