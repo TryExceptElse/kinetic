@@ -17,6 +17,9 @@
 #ifndef ACTOR_SRC_UNIVERSE_H_
 #define ACTOR_SRC_UNIVERSE_H_
 
+#include <string>
+#include <memory>
+
 #include "system.h"
 #include "actor.h"
 
@@ -25,6 +28,22 @@ namespace kin {
 
 class Universe {
  public:
+    // General methods
+    bool AddSystem(std::unique_ptr<System> system);
+    bool AddActor(std::unique_ptr<Actor> actor);
+
+    SystemMap::iterator FindSystem(const std::string id) {
+        return systems_.find(id);
+    }
+
+    ActorMap::iterator FindActor(const std::string id) {
+        return actors_.find(id);
+    }
+
+    // Getters
+    const SystemMap& systems() const { return systems_; }
+    const ActorMap& actors() const { return actors_; }
+
  private:
     SystemMap systems_;
     ActorMap actors_;
