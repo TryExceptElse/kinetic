@@ -31,17 +31,18 @@ class System;
 
 class Actor {
  public:
-    Actor();
-    Actor(const Vector r, const Vector v);
-    explicit Actor(const std::string &json);
-    Actor(Universe *universe, const Vector r, const Vector v);
-    Actor(Universe *universe, const std::string &json);
+    Actor(const std::string actor_type = "", const std::string id = "",
+            const Vector r = Vector(), const Vector v = Vector());
+    Actor(Universe *universe, const std::string actor_type = "",
+            const std::string id = "",
+            const Vector r = Vector(), const Vector v = Vector());
 
     // General Methods
     KinematicData Predict(double t) const;
 
     // Getters
     const std::string& id() const { return id_; }
+    const std::string& actor_type() { return actor_type_; }
     const FlightPath& path() const { return *path_; }
  private:
     std::string id_;
