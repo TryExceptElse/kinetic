@@ -78,8 +78,11 @@ cdef class PyManeuver:
         cdef Vector vector
         cdef PerformanceData* data = performance_data.get()
         cdef Maneuver* ptr
-        if isinstance(direction, str):
-            maneuver_type = self.Types[direction].value
+        if isinstance(direction, (str, ManeuverTypes)):
+            if (isinstance(direction, str)):
+                maneuver_type = self.Types[direction].value
+            else:
+                maneuver_type = direction.value
             self._maneuver = mem.make_unique[Maneuver](
                     maneuver_type, dv, data[0], m0, t0)
         elif isinstance(direction, PyVector):
@@ -90,6 +93,9 @@ cdef class PyManeuver:
         elif isinstance(direction, int):  # check if first arg is python int
             ptr = <Maneuver *><long long>direction  # if so cast to pointer
             self._maneuver = mem.make_unique[Maneuver](ptr[0])
+        else:
+            raise TypeError(f'Unexpected type of first argument: {direction}'
+                            f'(type: {type(direction)})')
 
     @staticmethod
     cdef PyManeuver cp(Maneuver maneuver):
@@ -136,3 +142,46 @@ cdef class PyManeuver:
 
     cpdef double find_mass_at_time(self, double t):
         return self.get().FindMassAtTime(t)
+
+
+cdef class PyFlightPath:
+    def __cinit__(
+            self,
+            system: PySystem,
+            r: PyVector,
+            v: PyVector,
+            t: double,
+            **kwargs
+    ) -> None:
+        if 'ptr' in kwargs:
+            self._path = <FlightPath *><long long>kwargs['ptr']
+            self.owning = False
+            return
+        self._path = new FlightPath(system.get()[0], r.val(), v.val(), t)
+        self.owning = True
+
+    cpdef PyKinematicData predict(self, double time):
+        return PyKinematicData.cp(self._path.Predict(time))
+
+    # cpdef PredictOrbit(const double time, const Body *body = nullptr)
+
+    cpdef PyManeuver find_maneuver(self, double t):
+        return PyManeuver.cp(self._path.FindManeuver(t)[0])
+
+    cpdef PyManeuver find_next_maneuver(self, double t):
+        return PyManeuver.cp(self._path.FindNextManeuver(t)[0])
+
+    cpdef void add(self, PyManeuver maneuver) except *:
+        if maneuver.get() == NULL:
+            raise ValueError(
+            f'Passed maneuver {maneuver} had null wrapped address')
+        self._path.Add(maneuver.get()[0])
+
+    cpdef bint clear(self):
+        return self._path.Clear()
+
+    cpdef bint clear_after(self, double t):
+        return self._path.ClearAfter(t)
+
+    cpdef bint remove(self, PyManeuver maneuver):
+        return self._path.Remove(maneuver.get()[0])

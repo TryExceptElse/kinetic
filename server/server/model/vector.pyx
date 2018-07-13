@@ -9,17 +9,19 @@ cdef class PyVector:
 
     @staticmethod
     cdef PyVector cp(Vector vector):
-        cdef PyVector wrapper = PyVector
+        cdef PyVector wrapper = PyVector()
         wrapper._vector = vector
         return wrapper
 
     cdef inline Vector val(self):
         return self._vector
 
-    cpdef double sqlen(self) except -1.0:
+    @property
+    def sqlen(self) -> double:
         return self._vector.sqlen()
 
-    cpdef double len(self) except -1.0:
+    @property
+    def len(self) -> double:
         return self._vector.len()
 
     @property

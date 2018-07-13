@@ -169,6 +169,10 @@ const Maneuver* FlightPath::FindNextManeuver(const double t) const {
 void FlightPath::Add(const Maneuver &maneuver) {
     // Check that maneuver begins after all existing maneuvers
     // have ended.
+    if (&maneuver == nullptr) {
+        throw std::invalid_argument("FlightPath::Add() : "
+            "Passed maneuver had null address.");
+    }
     if (maneuvers_.size() > 0) {
         const Maneuver &last = *std::prev(maneuvers_.end())->second;
         if (last.t1() > maneuver.t0()) {

@@ -17,6 +17,3 @@ cdef class PyVector:
     cdef PyVector cp(Vector vector)
 
     cdef inline Vector val(self)
-
-    cpdef double sqlen(self) except -1.0
-    cpdef double len(self) except -1.0
