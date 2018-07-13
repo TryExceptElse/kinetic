@@ -87,6 +87,14 @@ setup(
             extra_objects=DEFAULT_OBJECTS,
             extra_compile_args=DEFAULT_COMPILER_ARGS,
             language='c++'
+        ),
+        Extension(
+            name='server.model.universe',
+            sources=['server/model/universe.pyx'],
+            include_dirs=DEFAULT_INCLUDES,
+            extra_objects=DEFAULT_OBJECTS,
+            extra_compile_args=DEFAULT_COMPILER_ARGS,
+            language='c++'
         )
     ], gdb_debug=True)
 )

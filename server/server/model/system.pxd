@@ -22,7 +22,7 @@ cdef extern from "system.h" namespace "kin" nogil:
         const string id() const
 
 
-cdef extern from "system.h":
+cdef extern from "system.h" nogil:
     System* kin_NewSystemFromRoot(Body *root)
     System* kin_NewSystemFromIdAndRoot(char *id, Body *root)
 
@@ -34,7 +34,7 @@ cdef class PySystem:
     cdef object universe  # PyUniverse universe
 
     @staticmethod
-    cdef PySystem wrap(System system)
+    cdef PySystem wrap(System *system)
 
     cdef System* get(self)
 
