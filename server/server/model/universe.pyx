@@ -30,7 +30,6 @@ cdef class PyUniverse:
             raise ValueError('Universe.AddActor() gives universe ownership '
                              f'of actor. Passed PyActor {actor} did not '
                              'have ownership, so ownership could not be passed')
-        print(f'added actor {actor.id}')
         return kin_Universe_AddActor(self.get(), actor.get())
 
     cpdef PySystem get_system(self, str id):
@@ -41,9 +40,6 @@ cdef class PyUniverse:
         return PySystem.wrap(<System *><long long>deref(it).second.get())
 
     cpdef PyActor get_actor(self, str id):
-        print(f'size {self._universe.actors().size()}')
-        print(f'first: '
-            f'{deref(self._universe.actors().begin()).second.get().id()}')
         cdef unordered_map[string, mem.unique_ptr[Actor]].iterator it = \
             self._universe.FindActor(id.encode('utf-8'))
         if it == self._universe.actors().end():
