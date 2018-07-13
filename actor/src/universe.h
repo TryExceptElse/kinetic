@@ -52,4 +52,13 @@ class Universe {
 
 }  // namespace kin
 
+
+// Wrapper helper: intended to help languages that do not support
+// move semantics.
+// TODO: relocate
+extern "C" bool kin_Universe_AddSystem(kin::Universe *uni, kin::System *system);
+
+extern "C" bool kin_Universe_AddActor(kin::Universe *uni, kin::Actor *actor);
+
+
 #endif  // ACTOR_SRC_UNIVERSE_H_
