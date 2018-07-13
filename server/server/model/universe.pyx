@@ -7,6 +7,7 @@ cdef class PyUniverse:
         if 'ptr' in kwargs:
             self._universe = <Universe *><long long>kwargs['ptr']
             self.owning = False
+            return
         self._universe = new Universe()
         self.owning = True
 
