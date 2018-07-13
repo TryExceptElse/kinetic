@@ -18,6 +18,16 @@ class TestPerformanceData(TestCase):
         self.assertEqual(100_000, data.thrust)
 
 
+class TestKinematicData(TestCase):
+    def test_kinematic_data_can_be_wrapped(self):
+        r = PyVector(0, 1, 2)
+        v = PyVector(3, 4, 5)
+        data = path.PyKinematicData(r, v)
+        self.assertEqual(0, data.r.x)
+        self.assertEqual(2, data.r.z)
+        self.assertEqual(4, data.v.y)
+
+
 class TestManeuver(TestCase):
     def test_maneuver_can_be_created_and_fields_initialized(self):
         data = path.PyPerformanceData(3000, 20_000)
