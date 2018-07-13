@@ -117,6 +117,7 @@ cdef class PyManeuver:
 cdef class PyFlightPath:
     cdef FlightPath *_path
     cdef bint owning
+    cdef PySystem _system  # Stores system to ensure proper deletion order.
 
     @staticmethod
     cdef inline PyFlightPath wrap(FlightPath *path):

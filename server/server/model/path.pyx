@@ -156,9 +156,11 @@ cdef class PyFlightPath:
         if 'ptr' in kwargs:
             self._path = <FlightPath *><long long>kwargs['ptr']
             self.owning = False
+            self._system = None
             return
         self._path = new FlightPath(system.get()[0], r.val(), v.val(), t)
         self.owning = True
+        self._system = system
 
     cpdef PyKinematicData predict(self, double time):
         return PyKinematicData.cp(self._path.Predict(time))
