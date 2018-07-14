@@ -14,6 +14,8 @@ cdef extern from "path.h" namespace "kin" nogil:
 
         Orbit(double u, const Vector r, const Vector v)
 
+        Orbit(const Orbit &other)
+
         double gravitational_parameter() const
         double semi_major_axis() const
         double periapsis() const
@@ -47,6 +49,7 @@ cdef extern from "path.h" namespace "kin" nogil:
         void Step(const double time)
         Orbit Predict(const double time) const
 
+
 cdef class PyOrbit:
     cdef Orbit* _orbit
     cdef bint owning
@@ -54,6 +57,13 @@ cdef class PyOrbit:
     @staticmethod
     cdef inline PyOrbit wrap(Orbit *orbit):
         return PyOrbit(ptr=<long long>orbit)
+
+    @staticmethod
+    cdef inline PyOrbit cp(const Orbit &orbit):
+        cdef Orbit *new_orbit = new Orbit(orbit)
+        wrapper = PyOrbit(ptr=<long long>new_orbit)
+        wrapper.owning = True
+        return wrapper
 
     cdef inline Orbit* get(self):
         return self._orbit

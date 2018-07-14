@@ -4,6 +4,7 @@ functions, structs, and classes of actor/src/path.h.
 """
 
 from enum import Enum
+from libcpp.cast cimport const_cast
 
 
 cdef class PyPerformanceData:
@@ -49,6 +50,37 @@ cdef class PyKinematicData:
     @property
     def v(self) -> double:
         return PyVector.cp(self._data.v)
+
+
+cdef class PyOrbitData:
+    def __init__(self, **kwargs):
+        if 'ptr' in kwargs:
+            self._data = mem.make_unique[OrbitData](
+                    (<OrbitData *><long long>kwargs['ptr'])[0])
+        else:
+            raise TypeError('Expected ptr to orbit data to copy.')
+        self._orbit = None
+        self._body = None
+
+    @staticmethod
+    cdef PyOrbitData cp(const OrbitData &data):
+        return PyOrbitData(ptr=<long long>&data)
+
+    @property
+    def orbit(self) -> PyOrbit:
+        if self._orbit is None:
+            self._orbit = PyOrbit.cp(self._data.get().orbit())
+        return self._orbit
+
+    @property
+    def body(self) -> PyBody:
+        if self._body is None:
+            # c++ OrbitData has const body reference, because it is not
+            # Expected to be changed, however since it becomes very
+            # inconvenient to wrap a const object, we simply
+            # cast it away here.
+            self._body = PyBody.wrap(<Body *>(&self._data.get().body()))
+        return self._body
 
 
 class ManeuverTypes(Enum):
@@ -165,7 +197,11 @@ cdef class PyFlightPath:
     cpdef PyKinematicData predict(self, double time):
         return PyKinematicData.cp(self._path.Predict(time))
 
-    # cpdef PredictOrbit(const double time, const Body *body = nullptr)
+    cpdef PyOrbitData predict_orbit(self, double time, PyBody body = None):
+        if body:
+            return PyOrbitData.cp(self._path.PredictOrbit(time, body.get()))
+        else:
+            return PyOrbitData.cp(self._path.PredictOrbit(time))
 
     cpdef PyManeuver find_maneuver(self, double t):
         return PyManeuver.cp(self._path.FindManeuver(t)[0])

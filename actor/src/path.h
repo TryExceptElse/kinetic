@@ -47,6 +47,9 @@ class OrbitData {
     const Orbit &orbit() const { return orbit_; }
     const Body &body() const { return body_; }
 
+    // Getters such as altitude, system_r, system_v, etc can be
+    // added later.
+
  private:
     const Orbit orbit_;
     const Body &body_;

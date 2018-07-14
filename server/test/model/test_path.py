@@ -129,3 +129,18 @@ class TestFlightPath(TestCase):
         v1 = prediction1.v
 
         self.assertAlmostEqual(v1.len, v0.len + dv, -1)  # within ~10
+
+    def test_orbit_data_can_be_calculated_at_arbitrary_time(self):
+        body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
+        system = PySystem(root=body)
+        r = PyVector(617244712358.0, -431694791368.0, -12036457087.0)
+        v = PyVector(7320.0, 11329.0, -0211.0)
+        path_ = path.PyFlightPath(system, r, v, 0)
+        prediction: path.PyOrbitData = \
+            path_.predict_orbit(374942509.78053558 / 2)
+
+        position: PyVector = prediction.orbit.position
+        self.assertAlmostEqual(-712305324741.15112, position.x, 0)
+        self.assertAlmostEqual(365151451881.22858, position.y, 0)
+        self.assertAlmostEqual(14442203602.998617, position.z, 0)
+        self.assertEqual(body.id, prediction.body.id)

@@ -76,6 +76,7 @@ cdef extern from "path.h" namespace "kin" nogil:
 
         # Gets KinematicData for passed point in time since t0 */
         KinematicData Predict(const double time) const
+        OrbitData PredictOrbit(const double time) const
         OrbitData PredictOrbit(const double time, const Body *body) const
         const Maneuver *FindManeuver(const double t) const
         const Maneuver *FindNextManeuver(const double t) const
@@ -92,6 +93,15 @@ cdef class PyKinematicData:
 
     @staticmethod
     cdef PyKinematicData cp(KinematicData data)
+
+
+cdef class PyOrbitData:
+    cdef mem.unique_ptr[OrbitData] _data
+    cdef PyBody _body
+    cdef PyOrbit _orbit
+
+    @staticmethod
+    cdef PyOrbitData cp(OrbitData &data)
 
 
 cdef class PyPerformanceData:
@@ -127,7 +137,7 @@ cdef class PyFlightPath:
         return self._path
 
     cpdef PyKinematicData predict(self, double time)
-    # cpdef PredictOrbit(const double time, const Body *body = nullptr) const;
+    cpdef PyOrbitData predict_orbit(self, double time, PyBody body = *)
     cpdef PyManeuver find_maneuver(self, double t)
     cpdef PyManeuver find_next_maneuver(self, double t)
 
