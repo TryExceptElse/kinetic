@@ -48,7 +48,7 @@ cdef class PyKinematicData:
         return PyVector.cp(self._data.r)
 
     @property
-    def v(self) -> double:
+    def v(self) -> PyVector:
         return PyVector.cp(self._data.v)
 
 
