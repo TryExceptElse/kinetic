@@ -21,12 +21,16 @@ DEFAULT_OBJECTS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
 
 DEFAULT_COMPILER_ARGS = ['-O3', '-g']
 
+SCRIPT_MODULES = [
+    'scripts.sample_orbit_plot',
+]
+
 
 setup(
     name='kinetic_server',
     version='0.0.0',
     packages=['server', 'server.model', 'test', 'test.model'],
-    py_modules=['main', 'settings'],
+    py_modules=['main', 'settings'] + SCRIPT_MODULES,
     license='Apache License Version 2.0',
     author='TryExceptElse',
     description='The newtonian strategy game.',
