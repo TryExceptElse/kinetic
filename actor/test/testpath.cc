@@ -204,6 +204,36 @@ TEST_CASE( "test orbit prediction has correct primary influence", "[Path]" ) {
     REQUIRE( orbit_prediction.body().id() == system.root().id() );
 }
 
+TEST_CASE( "Test odd edge case with repeated calculation succeeds", "[Path]") {
+
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 20000);  // ve, thrust
+    const double burn_start_t = period0 / 2;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2000,  // DV
+            performance,
+            150.0,  // m0
+            period0 / 2);  // t0
+    path.Add(maneuver);
+
+    // generate first round of points
+    for (int i = 0; i < 1000; ++i) {
+        double t = period0 / 1000.0 * i;
+        path.Predict(t);
+    }
+
+    // and then make an older prediction
+    path.Predict(period0 / 2.0);
+}
+
 
 // BALLISTIC SEGMENT --------------------------------------------------
 

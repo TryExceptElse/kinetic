@@ -211,6 +211,9 @@ bool FlightPath::Remove(const Maneuver &maneuver) {
 void FlightPath::Calculate(const double t) const {
     // Calculates flight path until passed time, with time being
     // relative to System t0.
+    if (t < cache_.status.end_t) {
+        return;
+    }
 
     // If a previous SegmentGroup has been left uncompleted,
     // finish it first.
