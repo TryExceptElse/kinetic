@@ -49,6 +49,11 @@ cdef extern from "path.h" namespace "kin" nogil:
 
 cdef class PyOrbit:
     cdef Orbit* _orbit
+    cdef bint owning
+
+    @staticmethod
+    cdef inline PyOrbit wrap(Orbit *orbit):
+        return PyOrbit(ptr=<long long>orbit)
 
     cdef inline Orbit* get(self):
         return self._orbit
