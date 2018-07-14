@@ -31,7 +31,8 @@ bool Universe::AddActor(std::unique_ptr<Actor> actor) {
 }  // namespace kin
 
 
-extern "C" bool kin_Universe_AddSystem(kin::Universe *uni, kin::System *system){
+extern "C" bool kin_Universe_AddSystem(
+        kin::Universe *uni, kin::System *system) {
     return uni->AddSystem(std::unique_ptr<kin::System>(system));
 }
 
