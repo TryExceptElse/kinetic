@@ -22,7 +22,7 @@ DEFAULT_OBJECTS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
 DEFAULT_COMPILER_ARGS = ['-O3', '-g']
 
 SCRIPT_MODULES = [
-    'scripts.sample_orbit_plot',
+    'scripts.orbit_vis',
 ]
 
 
