@@ -30,9 +30,9 @@ TEST_CASE( "test path with no maneuvers can be calculated", "[Path]" ) {
     const kin::KinematicData prediction = path.Predict(374942509.78053558 / 2);
 
     const kin::Vector position = prediction.r;
-    REQUIRE( position.x()== Approx(660798922159.6378173828).epsilon(0.0001) );
-    REQUIRE( position.y() == Approx(-462156171007.35309).epsilon(0.0001) );
-    REQUIRE( position.z() == Approx(-12885777245.989922).epsilon(0.0001) );
+    REQUIRE( position.x()== Approx(-719081127257.40515).epsilon(0.0001) );
+    REQUIRE( position.y() == Approx(364854624247.81012).epsilon(0.0001) );
+    REQUIRE( position.z() == Approx(14595231066.511684).epsilon(0.0001) );
 }
 
 /**
@@ -85,9 +85,9 @@ TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     // This test doesn't try to determine a precise position, just that
     // the calculation can complete, and results in a changed orbit.
     const kin::Vector position1 = prediction1.r;
-    REQUIRE( position1.x()== Approx(660798922159.6378173828).epsilon(0.0001) );
-    REQUIRE( position1.y() == Approx(-462156171007.35309).epsilon(0.0001) );
-    REQUIRE( position1.z() == Approx(-12885777245.989922).epsilon(0.0001) );
+    REQUIRE( position1.x()== Approx(-719081127257.40515).epsilon(0.0001) );
+    REQUIRE( position1.y() == Approx(364854624247.81012).epsilon(0.0001) );
+    REQUIRE( position1.z() == Approx(14595231066.511684).epsilon(0.0001) );
 
     // predict orbit of 3/2 period from t0.
     // Orbit should have changed notably
@@ -426,9 +426,9 @@ TEST_CASE( "test segment can predict half orbit", "[BallisticSegment]" ) {
 
     const kin::KinematicData result = segment.Predict(half_orbit + t0);
 
-    REQUIRE( result.r.x() == Approx(660798922159.6378173828).epsilon(0.0001) );
-    REQUIRE( result.r.y() == Approx(-462156171007.35309).epsilon(0.0001) );
-    REQUIRE( result.r.z() == Approx(-12885777245.989922).epsilon(0.0001) );
+    REQUIRE( result.r.x() == Approx(-719081127257.40515).epsilon(0.0001) );
+    REQUIRE( result.r.y() == Approx(364854624247.81012).epsilon(0.0001) );
+    REQUIRE( result.r.z() == Approx(14595231066.511684).epsilon(0.0001) );
 }
 
 /**
@@ -510,9 +510,9 @@ TEST_CASE( "test segment group can predict half orbit", "[BallisticSegment]" ) {
     segment_group.Calculate(tf);
     const kin::KinematicData result = segment_group.Predict(tf);
 
-    REQUIRE( result.r.x() == Approx(660798922159.6378173828).epsilon(0.0001) );
-    REQUIRE( result.r.y() == Approx(-462156171007.35309).epsilon(0.0001) );
-    REQUIRE( result.r.z() == Approx(-12885777245.989922).epsilon(0.0001) );
+    REQUIRE( result.r.x() == Approx(-719081127257.40515).epsilon(0.0001) );
+    REQUIRE( result.r.y() == Approx(364854624247.81012).epsilon(0.0001) );
+    REQUIRE( result.r.z() == Approx(14595231066.511684).epsilon(0.0001) );
 }
 
 /**

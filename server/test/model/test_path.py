@@ -83,9 +83,9 @@ class TestFlightPath(TestCase):
         # This test doesn't try to determine a precise position, just that
         # the calculation can complete, and results in a changed orbit.
         position1 = prediction1.r
-        self.assertAlmostEqual(-712305324741.15112, position1.x, 0)
-        self.assertAlmostEqual(365151451881.22858, position1.y, 0)
-        self.assertAlmostEqual(14442203602.998617, position1.z, 0)
+        self.assertAlmostEqual(-719081127257.4052, position1.x, 0)
+        self.assertAlmostEqual(-364854624247.8101, position1.y, 0)
+        self.assertAlmostEqual(-14595231066.51168, position1.z, 0)
 
         # predict orbit of 3/2 period from t0.
         # Orbit should have changed notably
@@ -133,7 +133,7 @@ class TestFlightPath(TestCase):
     def test_orbit_data_can_be_calculated_at_arbitrary_time(self):
         body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
         system = PySystem(root=body)
-        r = PyVector(617244712358.0, -431694791368.0, -12036457087.0)
+        r = PyVector(-719081127257.4052, -364854624247.8101, -14595231066.51168)
         v = PyVector(7320.0, 11329.0, -0211.0)
         path_ = path.PyFlightPath(system, r, v, 0)
         prediction: path.PyOrbitData = \
@@ -143,6 +143,20 @@ class TestFlightPath(TestCase):
         self.assertAlmostEqual(-712305324741.15112, position.x, 0)
         self.assertAlmostEqual(365151451881.22858, position.y, 0)
         self.assertAlmostEqual(14442203602.998617, position.z, 0)
+        self.assertEqual(body.id, prediction.body.id)
+
+    def test_orbit_data_can_be_calculated_at_time_0(self):
+        body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
+        system = PySystem(root=body)
+        r = PyVector(-719081127257.4052, -364854624247.8101, -14595231066.51168)
+        v = PyVector(7320.0, 11329.0, -0211.0)
+        path_ = path.PyFlightPath(system, r, v, 0)
+        prediction: path.PyOrbitData = path_.predict_orbit(0)
+
+        position: PyVector = prediction.orbit.position
+        self.assertAlmostEqual(-719081127257.4052, position.x, 0)
+        self.assertAlmostEqual(-364854624247.8101, position.y, 0)
+        self.assertAlmostEqual(-14595231066.51168, position.z, 0)
         self.assertEqual(body.id, prediction.body.id)
 
     def test_r_and_v_between_segment_groups_match(self):

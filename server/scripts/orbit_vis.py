@@ -165,6 +165,9 @@ def simple_orbit() -> None:
     print(f'r mag (in): {r.norm}')
     print(f'r (calculated): {orbit.position}')
     print(f'r mag (calculated) {orbit.position.norm}')
+    print()
+    print(f'period: {orbit.period}')
+    print(f'half orbit r: {orbit.predict(orbit.period / 4 * 3).position}')
 
     # Get points to plot
     x_pts = []
@@ -200,6 +203,48 @@ def simple_orbit() -> None:
     plt.plot(r.x, r.z, 'ro')  # current pos
     plt.plot(x_pts[0], z_pts[0], 'yo')
     plt.plot(half_orbit.position.x, half_orbit.position.z, 'go')
+    plt.axis('equal')
+    plt.show()
+
+
+@expose
+def simple_path() -> None:
+    body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
+    system = PySystem(root=body)
+    r = PyVector(-719081127257.4052, -364854624247.8101, -14595231066.51168)
+    v = PyVector(7320.0, 11329.0, -0211.0)
+    path_ = path.PyFlightPath(system, r, v, 0)
+
+    # Get points to plot
+    x_pts = []
+    y_pts = []
+    z_pts = []
+
+    for i in range(N_POINTS):
+        t = 374942509.78053558 * 2 / N_POINTS * i
+        predicted: path.PyKinematicData = path_.predict(t)
+        x_pts.append(predicted.r.x)
+        y_pts.append(predicted.r.y)
+        z_pts.append(predicted.r.z)
+
+    # Plot
+
+    plt.figure(1)
+    gs = gridspec.GridSpec(1, 2)
+    plt.subplots_adjust(hspace=0.5, wspace=0.35)
+
+    plt.subplot(gs[0, 0])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, y_pts, 'r-')  # line
+    plt.plot(r.x, r.y, 'ro')  # current pos
+    plt.plot(x_pts[0], y_pts[0], 'yo')
+    plt.axis('equal')
+
+    plt.subplot(gs[0, 1])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, z_pts, 'r-')  # line
+    plt.plot(r.x, r.z, 'ro')  # current pos
+    plt.plot(x_pts[0], z_pts[0], 'yo')
     plt.axis('equal')
     plt.show()
 

@@ -459,9 +459,9 @@ TEST_CASE( "test orbit prediction can be created", "[Orbit]" ) {
 
     const kin::Vector position = prediction.position();
     const kin::Vector velocity = prediction.velocity();
-    REQUIRE( position.x() == Approx(661379581115.96436).epsilon(0.0001) );
-    REQUIRE( position.y() == Approx(-462562278086.09253).epsilon(0.0001) );
-    REQUIRE( position.z() == Approx(-12897100269.857277).epsilon(0.0001) );
+    REQUIRE( position.x() == Approx(-457118078340.85107).epsilon(0.0001) );
+    REQUIRE( position.y() == Approx(-665152002423.83655).epsilon(0.0001) );
+    REQUIRE( position.z() == Approx(13000874825.274738).epsilon(0.0001) );
     REQUIRE( velocity.x() == Approx(10600.957453996163).epsilon(0.0001) );
     REQUIRE( velocity.y() == Approx(-6784.9496397940266).epsilon(0.0001) );
     REQUIRE( velocity.z() == Approx(-209.3331176139217).epsilon(0.0001) );
@@ -492,9 +492,9 @@ TEST_CASE( "test multi-orbit prediction can be created", "[Orbit]" ) {
     const kin::Orbit prediction = orbit.Predict(orbit.period() * 5 / 2);
 
     const kin::Vector position = prediction.position();
-    REQUIRE( position.x() == Approx(660798922159.6378173828).epsilon(0.0001) );
-    REQUIRE( position.y() == Approx(-462156171007.35309).epsilon(0.0001) );
-    REQUIRE( position.z() == Approx(-12885777245.989922).epsilon(0.0001) );
+    REQUIRE( position.x() == Approx(-719081127257.40515).epsilon(0.0001) );
+    REQUIRE( position.y() == Approx(364854624247.81012).epsilon(0.0001) );
+    REQUIRE( position.z() == Approx(14595231066.511684).epsilon(0.0001) );
 }
 
 TEST_CASE( "test multi-orbit un-prediction can be created", "[Orbit]" ) {
@@ -506,9 +506,9 @@ TEST_CASE( "test multi-orbit un-prediction can be created", "[Orbit]" ) {
 
     const kin::Vector position = prediction.position();
     const kin::Vector velocity = prediction.velocity();
-    REQUIRE( position.x() == Approx(660798922159.6378173828).epsilon(0.0001) );
-    REQUIRE( position.y() == Approx(-462156171007.35309).epsilon(0.0001) );
-    REQUIRE( position.z() == Approx(-12885777245.98992).epsilon(0.0001) );
+    REQUIRE( position.x() == Approx(-719081127257.40515).epsilon(0.0001) );
+    REQUIRE( position.y() == Approx(364854624247.81012).epsilon(0.0001) );
+    REQUIRE( position.z() == Approx(14595231066.511684).epsilon(0.0001) );
 }
 
 TEST_CASE( "test orbit can make a prediction 0s ahead", "[Orbit]" ) {
@@ -526,6 +526,24 @@ TEST_CASE( "test orbit can make a prediction 0s ahead", "[Orbit]" ) {
     REQUIRE( velocity.x() == Approx(7320.0).epsilon(0.0001) );
     REQUIRE( velocity.y() == Approx(11329.0).epsilon(0.0001) );
     REQUIRE( velocity.z() == Approx(-0211.0).epsilon(0.0001) );
+}
+
+TEST_CASE( "test orbit half period prediction changes dir", "[Orbit]" ) {
+    const kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 100000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    const kin::Orbit orbit(body, r, v);
+
+    const kin::Orbit result = orbit.Predict(half_orbit + t0);
+
+    const kin::Vector dir1 = r.normalized();
+    const kin::Vector dir2 = result.position().normalized();
+
+    REQUIRE( dir1.x() != Approx(dir2.x()).epsilon(0.1) );
+    REQUIRE( dir1.y() != Approx(dir2.y()).epsilon(0.1) );
+    REQUIRE( dir1.z() != Approx(dir2.z()).epsilon(0.1) );
 }
 
 TEST_CASE( "test orbit can be copied correctly", "[Orbit]" ) {
