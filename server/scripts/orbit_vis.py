@@ -154,8 +154,8 @@ def simple_orbit() -> None:
     # v = PyVector(430.0, 1239.0, -0211.0)
     # r = PyVector(617244712358.0, -431694791368.0, -402036457087.0)
     # v = PyVector(7320.0, 11329.0, -0211.0)
-    r = PyVector(617244712358.0, -831694791368.0, 317244712358.0)
-    v = PyVector(1412.0, 4619.0, -22.0)
+    r = PyVector(617244712358.0, -431694791368.0, -12036457087.0)
+    v = PyVector(7320.0, 11329.0, -0211.0)
     orbit = PyOrbit(u=const.G * 1.98891691172467e30, r=r, v=v)
     period = orbit.period
 
@@ -178,6 +178,8 @@ def simple_orbit() -> None:
         y_pts.append(predicted.position.y)
         z_pts.append(predicted.position.z)
 
+    half_orbit = orbit.predict(orbit.period / 2)
+
     # Plot
 
     plt.figure(1)
@@ -189,6 +191,7 @@ def simple_orbit() -> None:
     plt.plot(x_pts, y_pts, 'r-')  # line
     plt.plot(r.x, r.y, 'ro')  # current pos
     plt.plot(x_pts[0], y_pts[0], 'yo')
+    plt.plot(half_orbit.position.x, half_orbit.position.y, 'go')
     plt.axis('equal')
 
     plt.subplot(gs[0, 1])
@@ -196,6 +199,7 @@ def simple_orbit() -> None:
     plt.plot(x_pts, z_pts, 'r-')  # line
     plt.plot(r.x, r.z, 'ro')  # current pos
     plt.plot(x_pts[0], z_pts[0], 'yo')
+    plt.plot(half_orbit.position.x, half_orbit.position.z, 'go')
     plt.axis('equal')
     plt.show()
 
