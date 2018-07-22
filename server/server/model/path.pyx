@@ -4,6 +4,7 @@ functions, structs, and classes of actor/src/path.h.
 """
 
 from enum import Enum
+cimport cython as cy
 from libcpp.cast cimport const_cast
 
 

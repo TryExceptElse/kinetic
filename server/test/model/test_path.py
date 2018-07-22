@@ -128,7 +128,7 @@ class TestFlightPath(TestCase):
         v0 = prediction0.v
         v1 = prediction1.v
 
-        self.assertAlmostEqual(v1.len, v0.len + dv, -1)  # within ~10
+        self.assertAlmostEqual(v1.norm, v0.norm + dv, -1)  # within ~10
 
     def test_orbit_data_can_be_calculated_at_arbitrary_time(self):
         body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
@@ -144,3 +144,32 @@ class TestFlightPath(TestCase):
         self.assertAlmostEqual(365151451881.22858, position.y, 0)
         self.assertAlmostEqual(14442203602.998617, position.z, 0)
         self.assertEqual(body.id, prediction.body.id)
+
+    def test_r_and_v_between_segment_groups_match(self):
+        body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
+        system = PySystem(root=body)
+        r = PyVector(617244712358.0, -431694791368.0, -12036457087.0)
+        v = PyVector(7320.0, 11329.0, -0211.0)
+        path_ = path.PyFlightPath(system, r, v, 0)
+        
+        period0 = 374942509.78053558
+        performance = path.PyPerformanceData(3000, 200)  # ve, thrust
+        burn_start_t = period0 / 2
+        maneuver = path.PyManeuver(
+            path.PyManeuver.Types.Prograde,  # Maneuver Type
+            2,  # DV
+            performance,
+            150.0,  # m0
+            burn_start_t)  # t0
+        path_.add(maneuver)
+        
+        seg0_end_data = path_.predict(burn_start_t - 0.001)
+        seg1_start_data = path_.predict(burn_start_t)
+
+        # Roundabout check to make sure both predictions were different
+        self.assertNotEqual(seg0_end_data.v.x, seg1_start_data.v.x)
+        
+        # Check that velocities nearly match
+        self.assertAlmostEqual(seg0_end_data.v.x, seg1_start_data.v.x, 6)
+        self.assertAlmostEqual(seg0_end_data.v.y, seg1_start_data.v.y, 6)
+        self.assertAlmostEqual(seg0_end_data.v.z, seg1_start_data.v.z, 6)

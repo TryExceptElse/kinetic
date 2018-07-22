@@ -27,6 +27,9 @@ cdef class PyOrbit:
         if self.owning:
             del self._orbit
 
+    cpdef PyOrbit predict(self, double t):
+        return PyOrbit.cp(self._orbit.Predict(t))
+
     @property
     def gravitational_parameter(self) -> double:
         return self._orbit.gravitational_parameter()

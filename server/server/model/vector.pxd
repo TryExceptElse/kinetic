@@ -1,15 +1,19 @@
+cimport cython as cy
 
 
 cdef extern from "vector.h" namespace "kin" nogil:
     cdef cppclass Vector:
-        double x, y, z
-
         Vector()
         Vector(double x, double y, double z)
-        double len() const
-        double sqlen() const
+        double norm() const
+        double squaredNorm() const
+
+        double x() const
+        double y() const
+        double z() const
 
 
+@cy.final
 cdef class PyVector:
     cdef Vector _vector
 

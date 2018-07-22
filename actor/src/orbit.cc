@@ -15,19 +15,21 @@ namespace kin {
 
 Orbit::Orbit(const Body &ref,
     double a, double e, double i, double l, double w, double t):
-    u(ref.gm()), a(a), e(e), i(i), l(l), w(w), t(t) {}
+    u(ref.gm()), a(a), e(e), i(i), l(l), w(w), t(t),
+    transforms_initialized_(false) {}
 
 Orbit::Orbit(const Body &ref, const Vector r, const Vector v):
     Orbit(ref.gm(), r, v) {
 }
 
-Orbit::Orbit(double u, const Vector r, const Vector v): u(u) {
+Orbit::Orbit(double u, const Vector r, const Vector v): u(u), r0_(r), v0_(v) {
     // Validate inputs
-    if (r.sqlen() == 0.0) {
+    if (r.squaredNorm() == 0.0) {
         throw std::invalid_argument("Orbit initialized with r of [0,0,0]");
     }
     // Initialize orbital parameters
     CalcFromPosVel(r, v);
+    transforms_initialized_ = false;
 }
 
 // Getters ------------------------------------------------------------
@@ -81,12 +83,19 @@ double Orbit::mean_anomaly() const {
  * Gets Current position vector in orbit.
  */
 Vector Orbit::position() const {
-    const double p = semiparameter();
-    Vector r;
-    r.x = p * (cos(l) * cos(w + t) - sin(l) * cos(i) * sin(w + t));
-    r.y = p * (sin(l) * cos(w + t) + cos(l) * cos(i) * sin(w + t));
-    r.z = p * sin(i) * sin(w + t);
-    return r - epoch_;
+    const double ea = eccentric_anomaly();
+    // Generate positions in orbital plane.
+    const double p = a * (std::cos(ea) - e);
+    const double q = a * std::sin(ea) * std::sqrt(1 - std::pow(e, 2));
+    Vector untransformed_position(p, q, 0);
+
+    // Transform position
+    if (!transforms_initialized_) {
+        CalculateTransform(untransformed_position);
+    }
+    const Vector in_plane_r = plane_transform_ * untransformed_position;
+    return periapsis_transform_ * in_plane_r;
+    //return untransformed_position;
 }
 
 /**
@@ -94,14 +103,14 @@ Vector Orbit::position() const {
  */
 Vector Orbit::velocity() const {
     const double p = semiparameter();
-    Vector v;
     const double g = -sqrt(u/p);
-    v.x = g * (cos(l)          * (sin(w + t) + e * sin(w)) +
-               sin(l) * cos(i) * (cos(w + t) + e * cos(w)));
-    v.y = g * (sin(l)          * (sin(w + t) + e * sin(w)) -
-               cos(l) * cos(i) * (cos(w + t) + e * cos(w)));
-    v.z = -g * (sin(i) * (cos(w + t) + e * cos(w)));
-    return v;
+    return {
+        g * (cos(l)          * (sin(w + t) + e * sin(w)) +  // X
+             sin(l) * cos(i) * (cos(w + t) + e * cos(w))),
+        g * (sin(l)          * (sin(w + t) + e * sin(w)) -  // Y
+             cos(l) * cos(i) * (cos(w + t) + e * cos(w))),
+        -g * (sin(i) * (cos(w + t) + e * cos(w))),          // Z
+    };
 }
 
 // Other Methods ------------------------------------------------------
@@ -110,45 +119,41 @@ Vector Orbit::velocity() const {
  * Calculates orbital elements from passed orbital vectors.
  */
 void Orbit::CalcFromPosVel(const Vector r, const Vector v) {
-    const Vector h = r * v;        // calculate specific relative angular moment
-    const Vector n(-h.y, h.x, 0);  // calculate vector to the ascending node
+    const Vector h = r.cross(v);   // Calculate angular momentum.
+    const Vector n(-h.y(), h.x(), 0);  // Calculate ascending node vector.
 
     // calculate eccentricity vector and scalar
-    Vector e = ((v * h) * (1.0 / u)) - (r * (1.0 / r.len()));
-    this->e = e.len();
+    Vector e = v.cross(h) / u - r / r.norm();
+    this->e = e.norm();
 
     // calculate specific orbital energy and semi-major axis
-    const double E = v.sqlen() * 0.5 - u / r.len();
+    const double E = v.squaredNorm() * 0.5 - u / r.norm();
     this->a = -u / (E * 2);
 
     // calculate inclination
-    this->i = acos(h.z / h.len());
+    this->i = acos(h.z() / h.norm());
 
     // calculate longitude of ascending node
     if (this->i == 0.0)
         this->l = 0;
-    else if (n.y >= 0.0)
-        this->l = acos(n.x / n.len());
+    else if (n.y() >= 0.0)
+        this->l = acos(n.x() / n.norm());
     else
-        this->l = 2 * PI - acos(n.x / n.len());
+        this->l = 2 * PI - acos(n.x() / n.norm());
 
     // calculate argument of periapsis
     if (this->i == 0.0)
-        this->w = acos(e.x / e.len());
-    else if (e.z >= 0.0)
-        this->w = acos(n.Dot(e) / (n.len() * e.len()));
+        this->w = acos(e.x() / e.norm());
+    else if (e.z() >= 0.0)
+        this->w = acos(n.dot(e) / (n.norm() * e.norm()));
     else
-        this->w = 2 * PI - acos(n.Dot(e) / (n.len() * e.len()));
+        this->w = 2 * PI - acos(n.dot(e) / (n.norm() * e.norm()));
 
     // calculate true anomaly
-    if (r.Dot(v) >= 0.0)
-        this->t = acos(e.Dot(r) / (e.len() * r.len()));
+    if (r.dot(v) >= 0.0)
+        this->t = acos(e.dot(r) / (e.norm() * r.norm()));
     else
-        this->t = 2 * PI - acos(e.Dot(r) / (e.len() * r.len()));
-
-    // calculate epoch
-    this->epoch_ = Vector(0, 0, 0);
-    this->epoch_ = position() - r;
+        this->t = 2 * PI - acos(e.dot(r) / (e.norm() * r.norm()));
 }
 
 /**
@@ -202,6 +207,19 @@ double Orbit::CalcEccentricAnomaly(const double mean_anomaly) const {
     return E;
 }
 
+void Orbit::CalculateTransform(const Vector untransformed_position) const {
+    if (!r0_.isZero(0) && !v0_.isZero(0)) {
+        const Vector orbit_plane_normal = r0_.cross(v0_).normalized();
+        plane_transform_ = Quaternion().setFromTwoVectors(
+                Vector(0.0, 0.0, 1.0), orbit_plane_normal);
+        const Vector r2 = plane_transform_ * untransformed_position;
+        periapsis_transform_ = Quaternion().setFromTwoVectors(r2, r0_);
+    } else {
+        throw std::runtime_error("Transform from elements not yet supported");
+    }
+    transforms_initialized_ = true;
+}
+
 double Orbit::SpeedAtDistance(const double distance) const {
     return std::sqrt(u * (2 / distance - 1 / a));
 }
@@ -226,6 +244,8 @@ Orbit Orbit::Predict(const double time) const {
     // Copy elision optimization should occur.
     Orbit prediction = *this;
     prediction.Step(time);
+    prediction.plane_transform_ = plane_transform_;
+    prediction.periapsis_transform_ = periapsis_transform_;
     return prediction;
 }
 

@@ -6,7 +6,10 @@ from os import path
 SERVER_PATH = path.abspath(path.dirname(__file__))
 ROOT_PATH = path.abspath(path.join(SERVER_PATH, '..'))
 
-DEFAULT_INCLUDES = [path.join(ROOT_PATH, 'actor', 'src')]
+DEFAULT_INCLUDES = [
+    path.join(ROOT_PATH, 'actor', 'src'),
+    path.join(ROOT_PATH, 'actor', 'third_party', 'src')
+]
 
 
 def static_lib_name(base_name: str) -> str:
@@ -19,7 +22,7 @@ def static_lib_name(base_name: str) -> str:
 DEFAULT_OBJECTS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
                              'actor', 'static', static_lib_name('actor'))]
 
-DEFAULT_COMPILER_ARGS = ['-O3', '-g']
+DEFAULT_COMPILER_ARGS = ['-O0', '-g']
 
 SCRIPT_MODULES = [
     'scripts.orbit_vis',

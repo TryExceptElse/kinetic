@@ -76,8 +76,18 @@ class Orbit {
     Vector position() const;
     Vector velocity() const;
 
+    void Step(const double time);
+    Orbit Predict(const double time) const;
+
+ protected:
+    double u, a, e, i, l, w, t;
+    mutable Matrix plane_transform_, periapsis_transform_;
+    const Vector r0_, v0_;
+    mutable bool transforms_initialized_;
+
     // vectors in geocentric equatorial inertial coordinates
     void CalcFromPosVel(const Vector r, const Vector v);
+    void CalculateTransform(const Vector untransformed_r) const;
 
     // For small eccentricities a good approximation of true anomaly can be
     // obtained by the following formula (the error is of the order e^3)
@@ -85,12 +95,6 @@ class Orbit {
     double CalcEccentricAnomaly(const double meanAnomaly) const;
     double SpeedAtDistance(const double distance) const;
     void CalcTrueAnomaly(const double eccentricAnomaly);
-    void Step(const double time);
-    Orbit Predict(const double time) const;
-
- protected:
-    double u, a, e, i, l, w, t;
-    Vector epoch_;
 };
 
 

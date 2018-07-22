@@ -1,3 +1,4 @@
+cimport cython as cy
 cimport libcpp.memory as mem
 from libcpp.string cimport string
 from libcpp cimport bool
@@ -35,6 +36,7 @@ cdef extern from "body.h" namespace "kin" nogil:
         const unordered_map[string, mem.unique_ptr[Body]]& children() const
 
 
+@cy.final
 cdef class PyBody:
     cdef Body* _body
     cdef bool owning

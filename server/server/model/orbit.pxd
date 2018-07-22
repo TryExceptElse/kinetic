@@ -1,3 +1,5 @@
+cimport cython as cy
+
 from server.model.body cimport Body, PyBody
 from server.model.vector cimport Vector, PyVector
 
@@ -50,6 +52,7 @@ cdef extern from "path.h" namespace "kin" nogil:
         Orbit Predict(const double time) const
 
 
+@cy.final
 cdef class PyOrbit:
     cdef Orbit* _orbit
     cdef bint owning
@@ -67,3 +70,5 @@ cdef class PyOrbit:
 
     cdef inline Orbit* get(self):
         return self._orbit
+
+    cpdef PyOrbit predict(self, double t)

@@ -3,9 +3,7 @@
 cdef class PyVector:
     """ Wraps Vector """
     def __init__(self, x=0, y=0, z=0):
-        self._vector.x = x
-        self._vector.y = y
-        self._vector.z = z
+        self._vector = Vector(x, y, z)
 
     @staticmethod
     cdef PyVector cp(Vector vector):
@@ -17,33 +15,24 @@ cdef class PyVector:
         return self._vector
 
     @property
-    def sqlen(self) -> double:
-        return self._vector.sqlen()
+    def squared_norm(self) -> double:
+        return self._vector.squaredNorm()
 
     @property
-    def len(self) -> double:
-        return self._vector.len()
+    def norm(self) -> double:
+        return self._vector.norm()
 
     @property
     def x(self) -> float:
-        return self._vector.x
-
-    @x.setter
-    def x(self, value: float):
-        self._vector.x = value
+        return self._vector.x()
 
     @property
     def y(self) -> float:
-        return self._vector.y
-
-    @y.setter
-    def y(self, value: float):
-        self._vector.y = value
+        return self._vector.y()
 
     @property
     def z(self):
-        return self._vector.z
+        return self._vector.z()
 
-    @z.setter
-    def z(self, value):
-        self._vector.z = value
+    def __str__(self) -> str:
+        return f'Vector[x={self.x}, y={self.y}, z={self.z}]'

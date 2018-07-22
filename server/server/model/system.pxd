@@ -1,3 +1,4 @@
+cimport cython as cy
 cimport libcpp.memory as mem
 from libcpp.string cimport string
 
@@ -27,6 +28,7 @@ cdef extern from "system.h" nogil:
     System* kin_NewSystemFromIdAndRoot(char *id, Body *root)
 
 
+@cy.final
 cdef class PySystem:
     cdef System* _system
     cdef bint owning

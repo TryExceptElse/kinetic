@@ -1,6 +1,7 @@
 cimport libcpp.memory as mem
 from libcpp.unordered_map cimport unordered_map
 from libcpp.string cimport string
+cimport cython as cy
 
 from server.model.actor cimport Actor, PyActor
 from server.model.system cimport System, PySystem
@@ -21,6 +22,7 @@ cdef extern from "universe.h" nogil:
     bint kin_Universe_AddActor(Universe *uni, Actor *actor)
 
 
+@cy.final
 cdef class PyUniverse:
     cdef Universe* _universe
     cdef bint owning

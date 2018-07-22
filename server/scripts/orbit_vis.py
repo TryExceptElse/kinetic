@@ -15,6 +15,7 @@ if root_path not in sys.path:
 
 import server.model.const as const
 import server.model.path as path
+from server.model.orbit import PyOrbit
 from server.model.system import PySystem
 from server.model.body import PyBody
 from server.model.vector import PyVector
@@ -34,8 +35,8 @@ def expose(f):
 def position_plot() -> None:
     body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
     system = PySystem(root=body)
-    r = PyVector(617_244_712_358.0, -431_694_791_368.0, -12_036_457_087.0)
-    v = PyVector(7320.0, 11329.0, -0211.0)
+    r = PyVector(617_244_712.0, -431_694_791.0, -12_036_457.0)
+    v = PyVector(1320.0, 6329.0, -0211.0)
     path_ = path.PyFlightPath(system, r, v, 0)
 
     period0 = 374942509.78053558
@@ -44,7 +45,7 @@ def position_plot() -> None:
 
     maneuver = path.PyManeuver(
         path.PyManeuver.Types.Prograde,
-        2000,
+        1,
         performance,
         150,
         burn_start_t
@@ -84,15 +85,23 @@ def burn_plot() -> None:
     path_ = path.PyFlightPath(system, r, v, 0)
 
     period0 = 374942509.78053558
-    performance = path.PyPerformanceData(3000, 20000)  # ve, thrust
-    burn_start_t = period0 / 2
+    performance = path.PyPerformanceData(3000, 2000)  # ve, thrust
+    burn_start_t = 2
 
     maneuver = path.PyManeuver(
         path.PyManeuver.Types.Prograde,
-        2000,
+        10,
         performance,
         150,
         burn_start_t
+    )
+    path_.add(maneuver)
+    maneuver = path.PyManeuver(
+        path.PyManeuver.Types.Prograde,
+        10,
+        performance,
+        150,
+        burn_start_t + 2
     )
     path_.add(maneuver)
 
@@ -112,7 +121,7 @@ def burn_plot() -> None:
         t_pts.append(t - maneuver.t0)  # Time relative to burn t0
 
         orbit_data = path_.predict_orbit(t)
-        v_pts.append(orbit_data.orbit.velocity.len)
+        v_pts.append(orbit_data.orbit.velocity.norm)
         apo_pts.append(orbit_data.orbit.apoapsis)
         a_pts.append(orbit_data.orbit.semi_major_axis)
 
@@ -136,6 +145,58 @@ def burn_plot() -> None:
     plt.title('Semi Major Axis')
     plt.plot(t_pts, a_pts)
 
+    plt.show()
+
+
+@expose
+def simple_orbit() -> None:
+    # r = PyVector(17_244_712.0, -31_694_791.0, -2_036_457.0)
+    # v = PyVector(430.0, 1239.0, -0211.0)
+    # r = PyVector(617244712358.0, -431694791368.0, -402036457087.0)
+    # v = PyVector(7320.0, 11329.0, -0211.0)
+    r = PyVector(617244712358.0, -831694791368.0, 317244712358.0)
+    v = PyVector(1412.0, 4619.0, -22.0)
+    orbit = PyOrbit(u=const.G * 1.98891691172467e30, r=r, v=v)
+    period = orbit.period
+
+    print(f'simple distance: {r.norm}')
+    print(f'semi-major-axis: {orbit.semi_major_axis}')
+    print(f'r (in): {r}')
+    print(f'r mag (in): {r.norm}')
+    print(f'r (calculated): {orbit.position}')
+    print(f'r mag (calculated) {orbit.position.norm}')
+
+    # Get points to plot
+    x_pts = []
+    y_pts = []
+    z_pts = []
+
+    for i in range(N_POINTS):
+        t = period / N_POINTS * i
+        predicted: PyOrbit = orbit.predict(t)
+        x_pts.append(predicted.position.x)
+        y_pts.append(predicted.position.y)
+        z_pts.append(predicted.position.z)
+
+    # Plot
+
+    plt.figure(1)
+    gs = gridspec.GridSpec(1, 2)
+    plt.subplots_adjust(hspace=0.5, wspace=0.35)
+
+    plt.subplot(gs[0, 0])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, y_pts, 'r-')  # line
+    plt.plot(r.x, r.y, 'ro')  # current pos
+    plt.plot(x_pts[0], y_pts[0], 'yo')
+    plt.axis('equal')
+
+    plt.subplot(gs[0, 1])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, z_pts, 'r-')  # line
+    plt.plot(r.x, r.z, 'ro')  # current pos
+    plt.plot(x_pts[0], z_pts[0], 'yo')
+    plt.axis('equal')
     plt.show()
 
 

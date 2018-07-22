@@ -1,13 +1,16 @@
 #include <memory>
 #include <utility>
+#include <string>
+
 #include "catch.hpp"
+
+#include "vector.h"
 
 #define private public   // horribly hacky way to access private members
 #define protected public
 
 #include "system.h"
 #include "body.h"
-#include "vector.h"
 #include "orbit.h"
 #include "path.h"
 
@@ -27,9 +30,9 @@ TEST_CASE( "test path with no maneuvers can be calculated", "[Path]" ) {
     const kin::KinematicData prediction = path.Predict(374942509.78053558 / 2);
 
     const kin::Vector position = prediction.r;
-    REQUIRE( position.x == Approx(-712305324741.15112).epsilon(0.0001) );
-    REQUIRE( position.y == Approx(365151451881.22858).epsilon(0.0001) );
-    REQUIRE( position.z == Approx(14442203602.998617).epsilon(0.0001) );
+    REQUIRE( position.x()== Approx(-712305324741.15112).epsilon(0.0001) );
+    REQUIRE( position.y() == Approx(365151451881.22858).epsilon(0.0001) );
+    REQUIRE( position.z() == Approx(14442203602.998617).epsilon(0.0001) );
 }
 
 TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
@@ -58,18 +61,18 @@ TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     // This test doesn't try to determine a precise position, just that
     // the calculation can complete, and results in a changed orbit.
     const kin::Vector position1 = prediction1.r;
-    REQUIRE( position1.x == Approx(-712305324741.15112).epsilon(0.0001) );
-    REQUIRE( position1.y == Approx(365151451881.22858).epsilon(0.0001) );
-    REQUIRE( position1.z == Approx(14442203602.998617).epsilon(0.0001) );
+    REQUIRE( position1.x()== Approx(-712305324741.15112).epsilon(0.0001) );
+    REQUIRE( position1.y() == Approx(365151451881.22858).epsilon(0.0001) );
+    REQUIRE( position1.z() == Approx(14442203602.998617).epsilon(0.0001) );
 
     // predict orbit of 3/2 period from t0.
     // Orbit should have changed notably
     const kin::KinematicData prediction2 =
             path.Predict(374942509.78053558 * 3.0 / 2.0);
     const kin::Vector position2 = prediction2.r;
-    REQUIRE( position2.x != Approx(-712305324741.15112).epsilon(0.01) );
-    REQUIRE( position2.y != Approx(365151451881.22858).epsilon(0.01) );
-    REQUIRE( position2.z != Approx(14442203602.998617).epsilon(0.01) );
+    REQUIRE( position2.x() != Approx(-712305324741.15112).epsilon(0.01) );
+    REQUIRE( position2.y() != Approx(365151451881.22858).epsilon(0.01) );
+    REQUIRE( position2.z() != Approx(14442203602.998617).epsilon(0.01) );
 }
 
 
@@ -183,7 +186,7 @@ TEST_CASE( "test path maneuver increases velocity", "[Path]" ) {
     const kin::Vector v1 = prediction1.v;
 
     // New velocity should be increased by burn DV.
-    REQUIRE( v1.len() == Approx(v0.len() + dv).epsilon(0.002) );
+    REQUIRE( v1.norm() == Approx(v0.norm() + dv).epsilon(0.002) );
 }
 
 
@@ -225,13 +228,162 @@ TEST_CASE( "Test odd edge case with repeated calculation succeeds", "[Path]") {
     path.Add(maneuver);
 
     // generate first round of points
-    for (int i = 0; i < 1000; ++i) {
-        double t = period0 / 1000.0 * i;
+    for (int i = 0; i < 10; ++i) {
+        double t = period0 / 10 * i;
         path.Predict(t);
     }
 
     // and then make an older prediction
     path.Predict(period0 / 2.0);
+}
+
+TEST_CASE( "Test r and v between segment groups match", "[Path]") {
+
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 200);  // ve, thrust
+    const double burn_start_t = period0 / 2;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+    path.Add(maneuver);
+    
+    const kin::FlightPath::Segment &seg0 = path.GetSegment(0.0);
+    const kin::FlightPath::Segment &seg1 = path.GetSegment(burn_start_t);
+    
+    const kin::KinematicData seg0_end_data = seg0.Predict(burn_start_t);
+    const kin::KinematicData seg1_start_data = seg1.Predict(burn_start_t);
+
+    // Check that two different segments have been retrieved.
+    REQUIRE( &seg0 != &seg1 );
+    
+    // Check that velocities match
+    REQUIRE( seg0_end_data.v.x() == seg1_start_data.v.x() );
+    REQUIRE( seg0_end_data.v.y() == seg1_start_data.v.y() );
+    REQUIRE( seg0_end_data.v.z() == seg1_start_data.v.z() );
+    
+    // Check that positions match
+    REQUIRE( seg0_end_data.r.x() == seg1_start_data.r.x() );
+    REQUIRE( seg0_end_data.r.y() == seg1_start_data.r.y() );
+    REQUIRE( seg0_end_data.r.z() == seg1_start_data.r.z() );
+}
+
+TEST_CASE( "Test r and v between segment groups match2", "[Path]") {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 20);  // ve, thrust
+    const double burn_start_t = period0 / 2;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+    path.Add(maneuver);
+
+    const double burn_end_t = maneuver.t1();
+
+    const kin::FlightPath::Segment &seg0 = path.GetSegment(burn_start_t);
+    const kin::FlightPath::Segment &seg1 = path.GetSegment(burn_end_t);
+
+    const kin::KinematicData seg0_end_data = seg0.Predict(burn_end_t - 0.00001);
+    const kin::KinematicData seg1_start_data = seg1.Predict(burn_end_t);
+
+    // Check that two different segments have been retrieved.
+    REQUIRE( &seg0 != &seg1 );
+
+    // Check that velocities match
+    REQUIRE( seg0_end_data.v.x() ==
+             Approx(seg1_start_data.v.x()).epsilon(0.000001) );
+    REQUIRE( seg0_end_data.v.y() ==
+             Approx(seg1_start_data.v.y()).epsilon(0.000001) );
+    REQUIRE( seg0_end_data.v.z() ==
+             Approx(seg1_start_data.v.z()).epsilon(0.000001) );
+}
+
+TEST_CASE( "Test t between segments match up", "[Path]") {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 20);  // ve, thrust
+    const double burn_start_t = period0 / 2;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+    path.Add(maneuver);
+
+    const double burn_end_t = maneuver.t1();
+
+    const kin::FlightPath::Segment &seg0 = path.GetSegment(burn_start_t);
+    const kin::FlightPath::Segment &seg1 = path.GetSegment(burn_end_t);
+
+    REQUIRE( seg1.t0_ == burn_end_t );
+}
+
+TEST_CASE( "Test no abrupt velocity changes occur between segments", "[Path]") {
+
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector start_r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector start_v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, start_r, start_v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 200);  // ve, thrust
+    const double burn_start_t = period0 / 2;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+    path.Add(maneuver);
+
+    const double test_start_t = maneuver.t0() - 3.0;
+    const double test_end_t = maneuver.t1() + 3.0;
+    const double test_duration = test_end_t - test_start_t;
+    const int n_samples = 1000;
+    const double delta_limit = 0.004;
+
+    kin::Vector v, last_v, delta_v;
+    double max_delta = 0.0;
+    double max_delta_exceed_t;
+    last_v = path.Predict(test_start_t).v;
+    for (int i = 1; i < n_samples; ++i) {
+        double t = test_duration / n_samples * i + test_start_t;
+        v = path.Predict(t).v;
+        delta_v = v - last_v;
+        if (delta_v.norm() > max_delta) {
+            max_delta = delta_v.norm();
+            max_delta_exceed_t = t;
+        }
+        last_v = v;
+    }
+    REQUIRE( max_delta < delta_limit );
 }
 
 
@@ -250,9 +402,9 @@ TEST_CASE( "test segment can predict half orbit", "[BallisticSegment]" ) {
 
     const kin::KinematicData result = segment.Predict(half_orbit + t0);
 
-    REQUIRE( result.r.x == Approx(-712305324741.15112).epsilon(0.0001) );
-    REQUIRE( result.r.y == Approx(365151451881.22858).epsilon(0.0001) );
-    REQUIRE( result.r.z == Approx(14442203602.998617).epsilon(0.0001) );
+    REQUIRE( result.r.x() == Approx(-712305324741.15112).epsilon(0.0001) );
+    REQUIRE( result.r.y() == Approx(365151451881.22858).epsilon(0.0001) );
+    REQUIRE( result.r.z() == Approx(14442203602.998617).epsilon(0.0001) );
 }
 
 TEST_CASE( "test segment can calculate half orbit", "[BallisticSegment]" ) {
@@ -271,6 +423,29 @@ TEST_CASE( "test segment can calculate half orbit", "[BallisticSegment]" ) {
     REQUIRE( status.end_t > tf );
 }
 
+TEST_CASE( "test ballistic seg calc + predict agree", "[BallisticSegment]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 1000000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    const double tf = half_orbit + t0;
+
+    // Create BallisticSegment
+    kin::FlightPath::BallisticSegment segment(system, r, v, t0);
+    const kin::FlightPath::CalculationStatus status = segment.Calculate(tf);
+    kin::KinematicData prediction = segment.Predict(status.end_t);
+
+    // Check that prediction and calculation results are in agreement.
+    REQUIRE( status.r.x() == prediction.r.x() );
+    REQUIRE( status.r.y() == prediction.r.y() );
+    REQUIRE( status.r.z() == prediction.r.z() );
+}
+
+// BALLISTIC SEGMENT GROUP --------------------------------------------
+
 TEST_CASE( "test segment group can predict half orbit", "[BallisticSegment]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
@@ -285,11 +460,10 @@ TEST_CASE( "test segment group can predict half orbit", "[BallisticSegment]" ) {
     segment_group.Calculate(tf);
     const kin::KinematicData result = segment_group.Predict(tf);
 
-    REQUIRE( result.r.x == Approx(-712305324741.15112).epsilon(0.0001) );
-    REQUIRE( result.r.y == Approx(365151451881.22858).epsilon(0.0001) );
-    REQUIRE( result.r.z == Approx(14442203602.998617).epsilon(0.0001) );
+    REQUIRE( result.r.x() == Approx(-712305324741.15112).epsilon(0.0001) );
+    REQUIRE( result.r.y() == Approx(365151451881.22858).epsilon(0.0001) );
+    REQUIRE( result.r.z() == Approx(14442203602.998617).epsilon(0.0001) );
 }
-
 
 TEST_CASE( "test calculate does not overrun group tf", "[BallisticSegment]" ) {
     std::unique_ptr<kin::Body> body =
@@ -308,7 +482,6 @@ TEST_CASE( "test calculate does not overrun group tf", "[BallisticSegment]" ) {
     REQUIRE( status.end_t == tf );
 }
 
-
 TEST_CASE( "test calc marks incomplete groups", "[BallisticSegment]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
@@ -324,6 +497,84 @@ TEST_CASE( "test calc marks incomplete groups", "[BallisticSegment]" ) {
     const kin::FlightPath::CalculationStatus status =
             segment_group.Calculate(tf);
     REQUIRE( status.incomplete_element == true );
+}
+
+TEST_CASE( "test calc and prediction agree", "[BallisticSegmentGroup]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 1000000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    const double tf = half_orbit + t0;
+
+    // Create BallisticSegmentGroup
+    kin::FlightPath::BallisticSegmentGroup segment_group(system, r, v, t0);
+    const kin::FlightPath::CalculationStatus status =
+            segment_group.Calculate(tf);
+    kin::KinematicData prediction = segment_group.Predict(status.end_t);
+
+    // Check that prediction and calculation results are in agreement.
+    REQUIRE( status.r.x() == prediction.r.x() );
+    REQUIRE( status.r.y() == prediction.r.y() );
+    REQUIRE( status.r.z() == prediction.r.z() );
+}
+
+// MANEUVER SEGMENT GROUP ---------------------------------------------
+
+TEST_CASE( "test calc status and prediction agree", "[ManeuverSegmentGroup]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    const kin::PerformanceData performance(3000, 200);  // ve, thrust
+    const double burn_start_t = 0.0;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+
+    // Create SegmentGroup
+    kin::FlightPath::ManeuverSegmentGroup segment_group(
+        system, &maneuver, r, v, burn_start_t);
+    const double tf = maneuver.t1();
+    const kin::FlightPath::CalculationStatus status =
+        segment_group.Calculate(tf);
+    kin::KinematicData prediction = segment_group.Predict(tf - 0.000001);
+
+    // Check that prediction and calculation results are in agreement.
+    REQUIRE( status.r.x() == Approx(prediction.r.x()).epsilon(0.0000001) );
+    REQUIRE( status.r.y() == Approx(prediction.r.y()).epsilon(0.0000001) );
+    REQUIRE( status.r.z() == Approx(prediction.r.z()).epsilon(0.0000001) );
+}
+
+TEST_CASE( "test maneuver group does not overrun", "[ManeuverSegmentGroup]") {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    const kin::PerformanceData performance(3000, 200);  // ve, thrust
+    const double burn_start_t = 0.0;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+
+    // Create SegmentGroup
+    kin::FlightPath::ManeuverSegmentGroup segment_group(
+        system, &maneuver, r, v, burn_start_t);
+    const double tf = maneuver.t1();
+    const kin::FlightPath::CalculationStatus status =
+        segment_group.Calculate(tf);
+
+    REQUIRE( status.end_t == maneuver.t1() );
 }
 
 
@@ -343,9 +594,9 @@ TEST_CASE( "test prograde thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(-0.70710678118  ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(-0.70710678118  ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(0.0             ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(-0.70710678118  ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(-0.70710678118  ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(0.0             ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test retrograde thrust vector is calculated", "[Maneuver]" ) {
@@ -361,9 +612,9 @@ TEST_CASE( "test retrograde thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(0.70710678118   ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(0.70710678118   ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(0.0             ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(0.70710678118   ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(0.70710678118   ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(0.0             ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test radial thrust vector is calculated", "[Maneuver]" ) {
@@ -379,9 +630,9 @@ TEST_CASE( "test radial thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(0.70710678118   ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(-0.70710678118  ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(0.0             ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(0.70710678118   ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(-0.70710678118  ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(0.0             ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test anti-radial thrust vector is calculated", "[Maneuver]" ) {
@@ -397,9 +648,9 @@ TEST_CASE( "test anti-radial thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(-0.70710678118  ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(0.70710678118   ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(0.0             ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(-0.70710678118  ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(0.70710678118   ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(0.0             ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test normal thrust vector is calculated", "[Maneuver]" ) {
@@ -415,9 +666,9 @@ TEST_CASE( "test normal thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(0.019992    ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(-0.019992   ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(-0.9996     ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(0.019992    ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(-0.019992   ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(-0.9996     ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test anti-normal thrust vector is calculated", "[Maneuver]" ) {
@@ -433,9 +684,9 @@ TEST_CASE( "test anti-normal thrust vector is calculated", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(-0.019992   ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(0.019992    ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(0.9996      ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(-0.019992   ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(0.019992    ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(0.9996      ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test fixed thrust vector is returned correctly", "[Maneuver]" ) {
@@ -451,9 +702,9 @@ TEST_CASE( "test fixed thrust vector is returned correctly", "[Maneuver]" ) {
 
     const kin::Vector expected(-0.70710678118, -0.70710678118, 0);
 
-    REQUIRE( result.x == Approx(1.0   ).epsilon(0.0001) );
-    REQUIRE( result.y == Approx(2.0   ).epsilon(0.0001) );
-    REQUIRE( result.z == Approx(3.0   ).epsilon(0.0001) );
+    REQUIRE( result.x() == Approx(1.0   ).epsilon(0.0001) );
+    REQUIRE( result.y() == Approx(2.0   ).epsilon(0.0001) );
+    REQUIRE( result.z() == Approx(3.0   ).epsilon(0.0001) );
 }
 
 TEST_CASE( "test maneuver has correct final mass fraction", "[Maneuver]" ) {

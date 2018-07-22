@@ -6,6 +6,8 @@ apply plugin: 'cpp'
 buildscript {
     ext.third_party_dir = 'build/third_party'
     ext.test_dir = '../out/test/actor'
+
+    ext.eigen_dir = 'third_party/eigen'
 }
 
 model {
@@ -14,7 +16,7 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs "src", "third_party/src"
+                        srcDirs "src"
                     }
                     exportedHeaders {
                         srcDirs "src", "third_party/src", "third_party/test"
@@ -44,13 +46,24 @@ model {
     }
 }
 
-build.doLast {
-    cppLint
-    // copy built tests
-    copy {
-        includeEmptyDirs = false
-        from new File("build/exe/testActor")
-        into test_dir
+task prepareActorDependencies(type: Exec) {
+    workingDir '.'
+    commandLine 'python3'
+    args 'scripts/prebuild.py'
+}
+
+build {
+    dependsOn prepareActorDependencies
+    tasks.findByName('build').mustRunAfter 'prepareActorDependencies'
+
+    doLast {
+        cppLint
+        // copy built tests
+        copy {
+            includeEmptyDirs = false
+            from new File("build/exe/testActor")
+            into test_dir
+        }
     }
 }
 

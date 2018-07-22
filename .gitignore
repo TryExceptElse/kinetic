@@ -24,3 +24,6 @@ actor/build/*
 # pytest stuff
 *.cache
 *.pytest_cache
+
+# Sources downloaded during build process
+actor/third_party/src/Eigen/*

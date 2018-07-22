@@ -15,6 +15,8 @@ class PyOrbit:
             v: PyVector = None,
             **kwargs
     ) -> None: ...
+
+    def predict(self, t: float) -> PyOrbit: ...
     
     gravitational_parameter = ...  # type: float
     periapsis = ...  # type: float

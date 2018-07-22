@@ -47,7 +47,7 @@ const Body& System::FindPrimaryInfluence(const Vector r, const double t) const {
             // check if position is within child sphere of influence
             double sphere_radius = child.sphere_of_influence();
             Vector child_r = child.PredictSystemPosition(t);
-            double distance_sq = (child_r - r).sqlen();
+            double distance_sq = (child_r - r).squaredNorm();
             // if position is within radius of child sphere of
             // influence, repeat process, but now with child as root.
             if (distance_sq < sphere_radius * sphere_radius) {

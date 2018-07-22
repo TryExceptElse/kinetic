@@ -1,4 +1,5 @@
 cimport libcpp.memory as mem
+cimport cython as cy
 
 from vector cimport Vector, PyVector
 from orbit cimport Orbit, PyOrbit
@@ -86,6 +87,7 @@ cdef extern from "path.h" namespace "kin" nogil:
         bint Clear()
 
 
+@cy.final
 cdef class PyKinematicData:
     cdef KinematicData _data
 
@@ -95,6 +97,7 @@ cdef class PyKinematicData:
     cdef PyKinematicData cp(KinematicData data)
 
 
+# For a currently unknown reason, the final decorator breaks things.
 cdef class PyOrbitData:
     cdef mem.unique_ptr[OrbitData] _data
     cdef PyBody _body
@@ -104,6 +107,7 @@ cdef class PyOrbitData:
     cdef PyOrbitData cp(OrbitData &data)
 
 
+@cy.final
 cdef class PyPerformanceData:
     cdef mem.unique_ptr[PerformanceData] _data
 
@@ -113,6 +117,7 @@ cdef class PyPerformanceData:
     cdef PyPerformanceData cp(PerformanceData data)
 
 
+@cy.final
 cdef class PyManeuver:
     cdef mem.unique_ptr[Maneuver] _maneuver
 
@@ -124,6 +129,7 @@ cdef class PyManeuver:
     cpdef double find_mass_at_time(self, double t)
 
 
+@cy.final
 cdef class PyFlightPath:
     cdef FlightPath *_path
     cdef bint owning

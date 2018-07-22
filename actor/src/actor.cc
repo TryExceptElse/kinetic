@@ -14,7 +14,9 @@ Actor::Actor(Universe *universe, const std::string actor_type,
         const std::string id, const Vector r, const Vector v):
             universe_(universe),
             id_(id.empty() ? sole::uuid4().str() : id),
-            actor_type_(actor_type) {}
+            actor_type_(actor_type) {
+    // TODO: Initialize path
+}
 
 KinematicData Actor::Predict(const double t) const {
     // If path is null, return zero'd kinematic data.

@@ -17,66 +17,15 @@
 #ifndef ACTOR_SRC_VECTOR_H_
 #define ACTOR_SRC_VECTOR_H_
 
-#include <cmath>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 namespace kin {
 
 
-class Vector {
- public:
-    double x, y, z;
-
-    Vector() : x(0), y(0), z(0) { }
-    Vector(double x, double y, double z) : x(x), y(y), z(z) { }
-
-    double sqlen() const { return x * x + y * y + z * z; }
-    double len() const { return std::sqrt(sqlen()); }
-
-    double Dot(const Vector other) const {
-        return x * other.x + y * other.y + z * other.z;
-    }
-
-    Vector Cross(const Vector other) const {
-        return Vector(y * other.z - z * other.y,
-                      z * other.x - x * other.z,
-                      x * other.y - y * other.x);
-    }
-
-    Vector norm() const {
-        const double mod = 1.0 / len();
-        return Vector(x * mod, y * mod, z * mod);
-    }
-
-    Vector operator* (const Vector other) const { return Cross(other); }
-
-    Vector operator* (const double scalar) const {
-        return Vector(scalar * x, scalar * y, scalar * z);
-    }
-
-    Vector operator/ (const double rhs) const {
-        return Vector(x / rhs, y / rhs, z / rhs);
-    }
-
-    Vector operator- (const double scalar) const {
-        return Vector(x - scalar, y - scalar, z - scalar);
-    }
-
-    Vector operator+ (const Vector other) const {
-        return Vector(x + other.x, y + other.y, z + other.z);
-    }
-
-    Vector operator- (const Vector other) const {
-        return Vector(x - other.x, y - other.y, z - other.z);
-    }
-
-    bool operator== (const Vector other) const {
-        return x == other.x && y == other.y && z == other.z;
-    }
-
-    bool operator!= (const Vector other) const {
-        return !(*this == other);
-    }
-};
+using Vector = Eigen::Vector3d;
+using Matrix = Eigen::Matrix3d;
+using Quaternion = Eigen::Quaterniond;
 
 
 }  // namespace kin

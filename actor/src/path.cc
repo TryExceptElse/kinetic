@@ -81,17 +81,17 @@ Vector Maneuver::FindThrustVector(
     const Vector rel_v = v - body_v;
     switch (type_) {
         case kPrograde:
-            return rel_v.norm();
+            return rel_v.normalized();
         case kRetrograde:
-            return rel_v.norm() * -1.0;
+            return rel_v.normalized() * -1.0;
         case kRadial:
-            return rel_r.norm();
+            return rel_r.normalized();
         case kAntiRadial:
-            return rel_r.norm() * -1.0;
+            return rel_r.normalized() * -1.0;
         case kNormal:
-            return rel_r.Cross(rel_v).norm();  // North when i is 0.0
+            return rel_r.cross(rel_v).normalized();  // North when i is 0.0
         case kAntiNormal:
-            return rel_v.Cross(rel_r).norm();  // South when i is 0.0
+            return rel_v.cross(rel_r).normalized();  // South when i is 0.0
         case kFixed:
             return fixed_vector_;
     }
@@ -110,7 +110,7 @@ FlightPath::FlightPath(
     }
     // If position is 0, 0, 0, then orbits cannot be
     // properly calculated.
-    if (r.sqlen() == 0.0) {
+    if (r.squaredNorm() == 0.0) {
         throw std::invalid_argument("FlightPath::FlightPath() : "
             "Passed position r was [0,0,0]");
     }
@@ -332,7 +332,7 @@ KinematicData FlightPath::ManeuverSegment::Predict(const double t) const {
     if (t >= calculation_status_.end_t) {
         throw std::invalid_argument("FlightPath::ManeuverSegment::Predict() : "
             "Passed t was >= end time of segment. t: " + std::to_string(t) +
-            "end: " + std::to_string(calculation_status_.end_t));
+            " end: " + std::to_string(calculation_status_.end_t));
     }
     // A number of approximations are made here that reduce the
     // accuracy of the result, but which simplify the code,
@@ -413,8 +413,8 @@ FlightPath::CalculationStatus
     const double mean_t =  t0_ + duration / 2;
     const Vector body_r1 = primary_body_.PredictSystemPosition(mean_t);
     const Vector rel_r1 = gravity_independent_r1 - body_r1;
-    const double gravity_a_mag = primary_body_.gm() / rel_r1.sqlen();
-    const Vector gravity_a = rel_r1.norm() * -gravity_a_mag;
+    const double gravity_a_mag = primary_body_.gm() / rel_r1.squaredNorm();
+    const Vector gravity_a = rel_r1.normalized() * -gravity_a_mag;
     // Set approximate acceleration used in segment.
     a_ = gravity_a + thrust_a;
     // Compute values needed in returned CalculationStatus.
@@ -504,7 +504,7 @@ FlightPath::CalculationStatus
             Vector local_position = orbit_.Predict(step_t - t0_).position();
             Vector local_peer_position = body->PredictLocalPosition(step_t);
             Vector position_difference = local_position - local_peer_position;
-            double distance = position_difference.len() -
+            double distance = position_difference.norm() -
                 body->sphere_of_influence();
             // Sanity check.
             if (distance < 0) {
@@ -562,7 +562,7 @@ FlightPath::SegmentGroup::SegmentGroup(
             "Passed value tf (" + std::to_string(t) + ") was < t "
             "(" + std::to_string(tf) + ")");
     }
-    if (r.sqlen() == 0.0) {
+    if (r.squaredNorm() == 0.0) {
         throw std::invalid_argument("SegmentGroup::SegmentGroup() : "
             "Passed position r was [0,0,0]");
     }
@@ -659,8 +659,6 @@ FlightPath::ManeuverSegmentGroup::ManeuverSegmentGroup(
             "ManeuverSegmentGroup::ManeuverSegmentGroup() : "
             "Passed maneuver was null");
     }
-    // Since comparing floating point numbers may not always work,
-    // Check if maneuver t0 and group t0 are almost equal.
     if (maneuver->t0() != t) {
         throw std::invalid_argument(
             "ManeuverSegmentGroup::ManeuverSegmentGroup() : "
