@@ -240,6 +240,13 @@ void Orbit::Step(const double time) {
 }
 
 Orbit Orbit::Predict(const double time) const {
+    if (!transforms_initialized_) {
+        position();  // Cache values that may be copied
+        // Since a single orbit may be copied many times, it
+        // is best to calculate anything that can be cached once,
+        // and then give that data to all copies, than to have each
+        // copy calculate things for themselves.
+    }
     // Create copy of self and advance.
     // Copy elision optimization should occur.
     Orbit prediction = *this;
