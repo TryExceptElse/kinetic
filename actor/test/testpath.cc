@@ -35,6 +35,30 @@ TEST_CASE( "test path with no maneuvers can be calculated", "[Path]" ) {
     REQUIRE( position.z() == Approx(-12885777245.989922).epsilon(0.0001) );
 }
 
+/**
+ * This tests for the effects of an improper update to the periapsis
+ * rotation matrix.
+ * This can manifest as all prediction positions existing in a line
+ * passing through the orbited body and the initial position.
+ */
+TEST_CASE( "test path prediction changes r direction vector", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    const kin::FlightPath path(system, r, v, 0);
+    // predict orbit of 1/2 period from t0.
+    const kin::KinematicData prediction = path.Predict(374942509.78053558 / 2);
+
+    const kin::Vector dir1 = r.normalized();
+    const kin::Vector dir2 = prediction.r.normalized();
+
+    REQUIRE( dir1.x() != Approx(dir2.x()).epsilon(0.1) );
+    REQUIRE( dir1.y() != Approx(dir2.y()).epsilon(0.1) );
+    REQUIRE( dir1.z() != Approx(dir2.z()).epsilon(0.1) );
+}
+
 TEST_CASE( "test path can be calculated with a maneuver", "[Path]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
@@ -407,6 +431,32 @@ TEST_CASE( "test segment can predict half orbit", "[BallisticSegment]" ) {
     REQUIRE( result.r.z() == Approx(-12885777245.989922).epsilon(0.0001) );
 }
 
+/**
+ * This tests for the effects of an improper update to the periapsis
+ * rotation matrix.
+ * This can manifest as all prediction positions existing in a line
+ * passing through the orbited body and the initial position.
+ */
+TEST_CASE( "test half orbit prediction changes dir", "[BallisticSegment]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 100000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    const kin::FlightPath::BallisticSegment segment(system, r, v, t0);
+
+    const kin::KinematicData result = segment.Predict(half_orbit + t0);
+
+    const kin::Vector dir1 = r.normalized();
+    const kin::Vector dir2 = result.r.normalized();
+
+    REQUIRE( dir1.x() != Approx(dir2.x()).epsilon(0.1) );
+    REQUIRE( dir1.y() != Approx(dir2.y()).epsilon(0.1) );
+    REQUIRE( dir1.z() != Approx(dir2.z()).epsilon(0.1) );
+}
+
 TEST_CASE( "test segment can calculate half orbit", "[BallisticSegment]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
@@ -463,6 +513,34 @@ TEST_CASE( "test segment group can predict half orbit", "[BallisticSegment]" ) {
     REQUIRE( result.r.x() == Approx(660798922159.6378173828).epsilon(0.0001) );
     REQUIRE( result.r.y() == Approx(-462156171007.35309).epsilon(0.0001) );
     REQUIRE( result.r.z() == Approx(-12885777245.989922).epsilon(0.0001) );
+}
+
+/**
+ * This tests for the effects of an improper update to the periapsis
+ * rotation matrix.
+ * This can manifest as all prediction positions existing in a line
+ * passing through the orbited body and the initial position.
+ */
+TEST_CASE( "test group half orbit prediction vec", "[BallisticSegment]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);
+    const kin::Vector v(7320.0,             11329.0,            -0211.0       );
+    const double t0 = 1000000.0;
+    const double half_orbit = 374942509.78053558 / 2;
+    kin::FlightPath::BallisticSegmentGroup segment_group(system, r, v, t0);
+
+    const double tf = half_orbit + t0;
+    segment_group.Calculate(tf);
+    const kin::KinematicData result = segment_group.Predict(tf);
+
+    const kin::Vector dir1 = r.normalized();
+    const kin::Vector dir2 = result.r.normalized();
+
+    REQUIRE( dir1.x() != Approx(dir2.x()).epsilon(0.1) );
+    REQUIRE( dir1.y() != Approx(dir2.y()).epsilon(0.1) );
+    REQUIRE( dir1.z() != Approx(dir2.z()).epsilon(0.1) );
 }
 
 TEST_CASE( "test calculate does not overrun group tf", "[BallisticSegment]" ) {
@@ -758,5 +836,4 @@ TEST_CASE( "test maneuver has correct t1", "[Maneuver]" ) {
 TEST_CASE( "test performance has correct flow rate", "[PerformanceData]" ) {
     const kin::PerformanceData performance(3000.0, 20000.0);  // Ve, Thrust
     REQUIRE( performance.flow_rate() == Approx(6.66666666667).epsilon(0.0001) );
-
 }
