@@ -528,6 +528,19 @@ TEST_CASE( "test orbit can make a prediction 0s ahead", "[Orbit]" ) {
     REQUIRE( velocity.z() == Approx(-0211.0).epsilon(0.0001) );
 }
 
+TEST_CASE( "test orbit v is correct half orbit ahead", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+    kin::Orbit prediction = orbit.Predict(orbit.period() / 2);
+
+    const kin::Vector velocity = prediction.velocity();
+    REQUIRE( velocity.x() == Approx(-6076.3228010508292).epsilon(0.0001) );
+    REQUIRE( velocity.y() == Approx(-11036.024234148772).epsilon(0.0001) );
+    REQUIRE( velocity.z() == Approx(181.9225936935494).epsilon(0.0001) );
+}
+
 TEST_CASE( "test orbit half period prediction changes dir", "[Orbit]" ) {
     const kin::Body body(kin::G * 1.98891691172467e30, 10.0);
     const kin::Vector r(617244712358.0,     -431694791368.0,    -12036457087.0);

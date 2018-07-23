@@ -472,12 +472,19 @@ FlightPath::CalculationStatus
         calculation_status_ = status;
         return calculation_status_;
     }
+    // Get max step duration. This value may be reduced later.
+    // If orbit is elliptical (e < 1) it should be some fraction of
+    // an orbital period. Otherwise, roughly proportional to the
+    // amount of time potentially requred to escape the primary body's
+    // sphere of influence.
+    const double maxStepDuration = orbit_.eccentricity() < 1.0 ?
+            orbit_.period() * kMaxOrbitPeriodDurationPerStep :
+            primary_body_.sphere_of_influence() / orbit_.max_speed() *
+            kMaxOrbitPeriodDurationPerStep;
     // Create array of bodies in sphere of influence,
     // and their max speed.
     // These bodies, which share the same parent as the segment, are
     // referred to here as peers.
-    const double maxStepDuration =
-        orbit_.period() * kMaxOrbitPeriodDurationPerStep;
     std::vector<std::pair<Body*, double> > peer_body_speeds;
     for (const BodyIdPair &body_id_pair : primary_body_.children()) {
         // sanity check
@@ -523,6 +530,11 @@ FlightPath::CalculationStatus
                     break;  // There is no point in finding a closer peer body.
                 }
             }
+        }
+        if (!(step_duration > 0.0)) {
+            throw std::runtime_error("FlightPath::BallisticSegment::Calculate()"
+                    "step_duration was not > 0. value: " +
+                    std::to_string(step_duration));
         }
         double new_t = step_t + step_duration;
         calculation_status_.end_t = step_t + step_duration;

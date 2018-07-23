@@ -39,6 +39,10 @@ double Orbit::semi_minor_axis() const {
 }
 
 double Orbit::period() const {
+    if (e >= 1) {
+        throw std::runtime_error(
+            "Orbit::period() : No period for orbits with e >= 1");
+    }
     return 2 * PI * std::sqrt(a*a*a / u);
 }
 
@@ -95,22 +99,26 @@ Vector Orbit::position() const {
     }
     const Vector in_plane_r = plane_transform_ * untransformed_position;
     return periapsis_transform_ * in_plane_r;
-    //return untransformed_position;
 }
 
 /**
  * Gets Current velocity vector in orbit.
  */
 Vector Orbit::velocity() const {
-    const double p = semiparameter();
-    const double g = -sqrt(u/p);
-    return {
-        g * (cos(l)          * (sin(w + t) + e * sin(w)) +  // X
-             sin(l) * cos(i) * (cos(w + t) + e * cos(w))),
-        g * (sin(l)          * (sin(w + t) + e * sin(w)) -  // Y
-             cos(l) * cos(i) * (cos(w + t) + e * cos(w))),
-        -g * (sin(i) * (cos(w + t) + e * cos(w))),          // Z
-    };
+    const double ea = eccentric_anomaly();
+    // Transform velocity into 3d space.
+    const double distance = a * (1 - e * std::cos(ea));
+    const Vector untransformed_v = Vector(
+            - std::sin(ea),  // vp
+            std::sqrt(1 - e * e) * std::cos(ea),  // vq
+            0
+    ) * std::sqrt(u * a) / distance;
+    // Transform velocity
+    if (!transforms_initialized_) {
+        CalculateTransform();
+    }
+    const Vector in_plane_v = plane_transform_ * untransformed_v;
+    return periapsis_transform_ * in_plane_v;
 }
 
 // Other Methods ------------------------------------------------------
@@ -220,11 +228,20 @@ void Orbit::CalculateTransform(const Vector untransformed_position) const {
     transforms_initialized_ = true;
 }
 
+void Orbit::CalculateTransform() const {
+    // Roundabout + inefficient but simple way to ensure things are
+    // initialized.
+    position();
+}
+
 double Orbit::SpeedAtDistance(const double distance) const {
     return std::sqrt(u * (2 / distance - 1 / a));
 }
 
 void Orbit::Step(const double time) {
+    if (!transforms_initialized_) {
+        position();  // Initialize values before moving if they are not already.
+    }
     double M = mean_anomaly();
     M += mean_motion() * time;
 

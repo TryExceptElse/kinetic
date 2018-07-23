@@ -88,6 +88,7 @@ class Orbit {
     // vectors in geocentric equatorial inertial coordinates
     void CalcFromPosVel(const Vector r, const Vector v);
     void CalculateTransform(const Vector untransformed_r) const;
+    void CalculateTransform() const;
 
     // For small eccentricities a good approximation of true anomaly can be
     // obtained by the following formula (the error is of the order e^3)
