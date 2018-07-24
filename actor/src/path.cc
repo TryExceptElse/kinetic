@@ -411,15 +411,18 @@ FlightPath::CalculationStatus
             primary_body_, r0_, v0_, t0_) * a_mag;
     }();
 
+    // Find what position would be halfway through burn if no
+    // gravitational affects were applied.
+    const double half_duration = duration / 2;
     const Vector gravity_independent_r1 =
-        thrust_a * (std::pow(duration / 2, 2) / 2) + r0_;
+        thrust_a / 2 * std::pow(half_duration, 2) + v0_ * half_duration + r0_;
 
     const Vector gravity_a =
-            [this, gravity_independent_r1, duration]() -> Vector {
+            [this, gravity_independent_r1, half_duration]() -> Vector {
         // Find gravitational acceleration from mean position of
-        // r0 and gravity-independent rf
+        // r0 and gravity-independent rf.
         // First, find relative position from primary body.
-        const double mean_t =  t0_ + duration / 2;
+        const double mean_t =  t0_ + half_duration;
         const Vector body_r1 = primary_body_.PredictSystemPosition(mean_t);
         const Vector rel_r1 = gravity_independent_r1 - body_r1;
         const double mag = primary_body_.gm() / rel_r1.squaredNorm();
