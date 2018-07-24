@@ -384,37 +384,48 @@ FlightPath::CalculationStatus
     const Orbit initial_orbit(primary_body_, r0_, v0_);
     // Attempt to determine when segment ends.
 
-    // Check first for duration in which maximum mass ratio
-    // change occurs.
-    const double delta_m = maneuver_.m0() * kMaxMassRatioChangePerStep;
-    const double mass_limited_duration =
-        delta_m / maneuver_.performance().flow_rate();
-    // Check max duration of step allowed by ratio of orbital period.
-    const double period_limited_duration =
-        initial_orbit.period() * kMaxOrbitPeriodDurationPerStep;
-    // Use smaller of the two duration limits.
-    const double duration = std::min(
-        mass_limited_duration, period_limited_duration);
+    const double duration = [this, initial_orbit]() -> double {
+        // Check first for duration in which maximum mass ratio
+        // change occurs.
+        const double delta_m = maneuver_.m0() * kMaxMassRatioChangePerStep;
+        const double mass_limited_duration =
+            delta_m / maneuver_.performance().flow_rate();
+        // Check max duration of step allowed by ratio of orbital period.
+        const double period_limited_duration =
+            initial_orbit.period() * kMaxOrbitPeriodDurationPerStep;
+        // Use smaller of the two duration limits.
+        return std::min(mass_limited_duration, period_limited_duration);
+    }();
+
     const double tf = std::min(t0_ + duration, maneuver_.t1());
+
     // Approximate average acceleration over duration of step.
-    const double a0_mag = maneuver_.performance().thrust() / m0_;
-    const double mf = maneuver_.FindMassAtTime(tf);
-    const double a1_mag = maneuver_.performance().thrust() / mf;
-    const double a_mag = (a0_mag * 2 + a1_mag) / 3;
-    // Find acceleration vector
-    // First find gravity independent position.
-    const Vector thrust_a = maneuver_.FindThrustVector(
-        primary_body_, r0_, v0_, t0_) * a_mag;
+    const Vector thrust_a = [this, tf]() -> Vector {
+        const double a0_mag = maneuver_.performance().thrust() / m0_;
+        const double mf = maneuver_.FindMassAtTime(tf);
+        const double a1_mag = maneuver_.performance().thrust() / mf;
+        const double a_mag = (a0_mag * 2 + a1_mag) / 3;
+        // Find acceleration vector
+        // First find gravity independent position.
+        return maneuver_.FindThrustVector(
+            primary_body_, r0_, v0_, t0_) * a_mag;
+    }();
+
     const Vector gravity_independent_r1 =
         thrust_a * (std::pow(duration / 2, 2) / 2) + r0_;
-    // Find gravitational acceleration from mean position of
-    // r0 and gravity-independent rf
-    // First, find relative position from primary body.
-    const double mean_t =  t0_ + duration / 2;
-    const Vector body_r1 = primary_body_.PredictSystemPosition(mean_t);
-    const Vector rel_r1 = gravity_independent_r1 - body_r1;
-    const double gravity_a_mag = primary_body_.gm() / rel_r1.squaredNorm();
-    const Vector gravity_a = rel_r1.normalized() * -gravity_a_mag;
+
+    const Vector gravity_a =
+            [this, gravity_independent_r1, duration]() -> Vector {
+        // Find gravitational acceleration from mean position of
+        // r0 and gravity-independent rf
+        // First, find relative position from primary body.
+        const double mean_t =  t0_ + duration / 2;
+        const Vector body_r1 = primary_body_.PredictSystemPosition(mean_t);
+        const Vector rel_r1 = gravity_independent_r1 - body_r1;
+        const double mag = primary_body_.gm() / rel_r1.squaredNorm();
+        return rel_r1.normalized() * -mag;
+    }();
+
     // Set approximate acceleration used in segment.
     a_ = gravity_a + thrust_a;
     // Compute values needed in returned CalculationStatus.
