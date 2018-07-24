@@ -52,9 +52,9 @@ class TestFlightPath(TestCase):
         prediction: path.PyKinematicData = path_.predict(374942509.78053558 / 2)
         
         position: PyVector = prediction.r
-        self.assertAlmostEqual(-712305324741.15112, position.x, 0)
-        self.assertAlmostEqual(365151451881.22858, position.y, 0)
-        self.assertAlmostEqual(14442203602.998617, position.z, 0)
+        self.assertAlmostEqual(-719081127257.4052, position.x, 0)
+        self.assertAlmostEqual(364854624247.8101, position.y, 0)
+        self.assertAlmostEqual(14595231066.51168, position.z, 0)
         
     def test_path_can_be_calculated_with_a_maneuver(self):
         """
@@ -84,8 +84,8 @@ class TestFlightPath(TestCase):
         # the calculation can complete, and results in a changed orbit.
         position1 = prediction1.r
         self.assertAlmostEqual(-719081127257.4052, position1.x, 0)
-        self.assertAlmostEqual(-364854624247.8101, position1.y, 0)
-        self.assertAlmostEqual(-14595231066.51168, position1.z, 0)
+        self.assertAlmostEqual(364854624247.8101, position1.y, 0)
+        self.assertAlmostEqual(14595231066.51168, position1.z, 0)
 
         # predict orbit of 3/2 period from t0.
         # Orbit should have changed notably
@@ -140,9 +140,9 @@ class TestFlightPath(TestCase):
             path_.predict_orbit(374942509.78053558 / 2)
 
         position: PyVector = prediction.orbit.position
-        self.assertAlmostEqual(-712305324741.15112, position.x, 0)
-        self.assertAlmostEqual(365151451881.22858, position.y, 0)
-        self.assertAlmostEqual(14442203602.998617, position.z, 0)
+        self.assertAlmostEqual(-483167275930.97107, position.x, 0)
+        self.assertAlmostEqual(-1432791663675.9163, position.y, 0)
+        self.assertAlmostEqual(46273154729.87547, position.z, 0)
         self.assertEqual(body.id, prediction.body.id)
 
     def test_orbit_data_can_be_calculated_at_time_0(self):
