@@ -58,7 +58,7 @@ class Orbit {
     double gravitational_parameter() const { return u; }
     double semi_major_axis() const { return a; }
     double periapsis() const { return a * (1.0 - e); }
-    double apoapsis() const { return e < 1 ? a * (1.0 + e) : -1.0; }
+    double apoapsis() const { return a * (1.0 + e); }
     double eccentricity() const { return e; }
     double inclination() const { return i; }
     double longitude_of_ascending_node() const { return l; }
@@ -92,10 +92,10 @@ class Orbit {
 
     // For small eccentricities a good approximation of true anomaly can be
     // obtained by the following formula (the error is of the order e^3)
-    double EstimateTrueAnomaly(const double meanAnomaly) const;
-    double CalcEccentricAnomaly(const double meanAnomaly) const;
+    double EstimateTrueAnomaly(const double mean_anomaly) const;
+    double CalcEccentricAnomaly(const double mean_anomaly) const;
     double SpeedAtDistance(const double distance) const;
-    void CalcTrueAnomaly(const double eccentricAnomaly);
+    void CalcTrueAnomaly(const double eccentric_anomaly);
 };
 
 
