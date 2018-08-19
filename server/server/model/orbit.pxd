@@ -39,9 +39,6 @@ cdef extern from "path.h" namespace "kin" nogil:
         Vector position() const
         Vector velocity() const
 
-        # Vectors in geocentric equatorial inertial coordinates
-        void CalcFromPosVel(const Vector r, const Vector v);
-
         # For small eccentricities a good approximation of true anomaly can be
         # obtained by the following formula (the error is of the order e^3)
         double EstimateTrueAnomaly(const double meanAnomaly) const

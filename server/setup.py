@@ -22,7 +22,7 @@ def static_lib_name(base_name: str) -> str:
 DEFAULT_OBJECTS = [path.join(ROOT_PATH, 'actor', 'build', 'libs',
                              'actor', 'static', static_lib_name('actor'))]
 
-DEFAULT_COMPILER_ARGS = ['-O0', '-g']
+DEFAULT_COMPILER_ARGS = ['-O0', '-g', '-fdata-sections']
 
 SCRIPT_MODULES = [
     'scripts.orbit_vis',

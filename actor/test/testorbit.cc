@@ -165,6 +165,18 @@ TEST_CASE( "test mean anomaly is calculated correctly", "[Orbit]" ) {
     );
 }
 
+TEST_CASE( "test mean anomaly is calculated correctly2", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(-7320.0, -11329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    REQUIRE(
+        orbit.mean_anomaly() ==
+        Approx(0.80480712652624641912).epsilon(0.0001)
+    );
+}
+
 TEST_CASE( "test mean anomaly is calculated correctly at high i", "[Orbit]" ) {
     kin::Body body(kin::G * 1.98891691172467e30, 10.0);
     kin::Vector r(617244712358.0, -431694791368.0, -402036457087.0);
@@ -218,12 +230,12 @@ TEST_CASE( "test apoapsis is calculated correctly when e < 1", "[Orbit]" ) {
 TEST_CASE( "test apoapsis is calculated correctly when e > 1", "[Orbit]" ) {
     kin::Body body(kin::G * 1.98891691172467e30, 10.0);
     kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
-    kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::Vector v(7320.0, 21329.0, -0211.0);
     kin::Orbit orbit(body, r, v);
 
     REQUIRE(
         orbit.apoapsis() ==
-        Approx(817161277034.0616).epsilon(0.0001)
+        Approx(-2408277215085.2436523438).epsilon(0.0001)
     );
 }
 
@@ -526,6 +538,93 @@ TEST_CASE( "test orbit can make a prediction 0s ahead", "[Orbit]" ) {
     REQUIRE( velocity.x() == Approx(7320.0).epsilon(0.0001) );
     REQUIRE( velocity.y() == Approx(11329.0).epsilon(0.0001) );
     REQUIRE( velocity.z() == Approx(-0211.0).epsilon(0.0001) );
+}
+
+TEST_CASE( "test hyperbolic orbit prediction can be made", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 21329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    orbit.Predict(74942509.78053558 / 1000.0);
+
+    REQUIRE(
+        orbit.apoapsis() == Approx(-2408277215085.2436523438).epsilon(0.0001)
+    );
+}
+
+TEST_CASE( "test hyperbolic orbit prediction has valid position", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 21329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    kin::Orbit prediction = orbit.Predict(74942509.78053558 / 1000.0);
+
+    REQUIRE( !std::isnan(prediction.position().x()) );
+}
+
+TEST_CASE( "test hyperbolic orbit prediction 0 is correct", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 21329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    const kin::Orbit prediction = orbit.Predict(0);
+    const kin::Vector position = prediction.position();
+    const kin::Vector velocity = prediction.velocity();
+
+    REQUIRE( position.x() == Approx(617244712358.0).epsilon(0.0001) );
+    REQUIRE( position.y() == Approx(-431694791368.0).epsilon(0.0001) );
+    REQUIRE( position.z() == Approx(-12036457087.0).epsilon(0.0001) );
+
+    REQUIRE( velocity.x() == Approx(7320.0).epsilon(0.0001) );
+    REQUIRE( velocity.y() == Approx(21329.0).epsilon(0.0001) );
+    REQUIRE( velocity.z() == Approx(-0211.0).epsilon(0.0001) );
+}
+
+TEST_CASE( "test hyperbolic orbit prediction anomalies persist", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 21329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    const kin::Orbit prediction = orbit.Predict(0);
+
+    REQUIRE( prediction.mean_anomaly() ==
+             Approx(orbit.mean_anomaly()).epsilon(0.00001) );
+    REQUIRE( prediction.eccentric_anomaly() ==
+             Approx(orbit.eccentric_anomaly()).epsilon(0.00001) );
+    REQUIRE( prediction.true_anomaly() ==
+             Approx(orbit.true_anomaly()).epsilon(0.00001) );
+}
+
+TEST_CASE( "test hyperbolic orbit prediction anomalies persist2", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(-7320.0, -21329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    const kin::Orbit prediction = orbit.Predict(0);
+
+    REQUIRE( prediction.mean_anomaly() ==
+             Approx(orbit.mean_anomaly()).epsilon(0.00001) );
+    REQUIRE( prediction.eccentric_anomaly() ==
+             Approx(orbit.eccentric_anomaly()).epsilon(0.00001) );
+    REQUIRE( prediction.true_anomaly() ==
+             Approx(orbit.true_anomaly()).epsilon(0.00001) );
+}
+
+TEST_CASE( "test hyperbolic orbit prediction elements persist", "[Orbit]" ) {
+    kin::Body body(kin::G * 1.98891691172467e30, 10.0);
+    kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    kin::Vector v(7320.0, 21329.0, -0211.0);
+    kin::Orbit orbit(body, r, v);
+
+    const kin::Orbit prediction = orbit.Predict(0);
+
+    REQUIRE( prediction.eccentricity() == orbit.eccentricity() );
+    REQUIRE( prediction.inclination() == orbit.inclination() );
 }
 
 TEST_CASE( "test orbit v is correct half orbit ahead", "[Orbit]" ) {

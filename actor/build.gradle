@@ -6,8 +6,6 @@ apply plugin: 'cpp'
 buildscript {
     ext.third_party_dir = 'build/third_party'
     ext.test_dir = '../out/test/actor'
-
-    ext.eigen_dir = 'third_party/eigen'
 }
 
 model {
@@ -40,7 +38,7 @@ model {
             }
             binaries.all {
                 lib library: 'actor', linkage: 'static'
-                cppCompiler.args '-O0', '-g', '-Wextra'
+                cppCompiler.args '-O0', '-g', '-Wextra', '-fdata-sections'
             }
         }
     }

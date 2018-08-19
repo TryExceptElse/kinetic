@@ -208,6 +208,60 @@ def simple_orbit() -> None:
 
 
 @expose
+def simple_hyperbolic_orbit() -> None:
+    r = PyVector(617244712358.0, -431694791368.0, -12036457087.0)
+    v = PyVector(7320.0, 21000.0, -0211.0)
+    orbit = PyOrbit(u=const.G * 1.98891691172467e30, r=r, v=v)
+    period = 374942509.78053558
+
+    print(f'simple distance: {r.norm}')
+    print(f'semi-major-axis: {orbit.semi_major_axis}')
+    print(f'eccentricity: {orbit.eccentricity}')
+    print(f'r (in): {r}')
+    print(f'r mag (in): {r.norm}')
+    print(f'r (calculated): {orbit.position}')
+    print(f'r mag (calculated) {orbit.position.norm}')
+
+    prediction = orbit.predict(0)
+
+    print(f'r (prediction): {prediction.position}')
+    print(f'r mag (prediction): {prediction.position.norm}')
+
+    # Get points to plot
+    x_pts = []
+    y_pts = []
+    z_pts = []
+
+    for i in range(N_POINTS):
+        t = period / N_POINTS * i
+        predicted: PyOrbit = orbit.predict(t)
+        x_pts.append(predicted.position.x)
+        y_pts.append(predicted.position.y)
+        z_pts.append(predicted.position.z)
+
+    # Plot
+
+    plt.figure(1)
+    gs = gridspec.GridSpec(1, 2)
+    plt.subplots_adjust(hspace=0.5, wspace=0.35)
+
+    plt.subplot(gs[0, 0])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, y_pts, 'r-')  # line
+    plt.plot(r.x, r.y, 'ro')  # current pos
+    plt.plot(x_pts[0], y_pts[0], 'yo')
+    plt.axis('equal')
+
+    plt.subplot(gs[0, 1])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, z_pts, 'r-')  # line
+    plt.plot(r.x, r.z, 'ro')  # current pos
+    plt.plot(x_pts[0], z_pts[0], 'yo')
+    plt.axis('equal')
+    plt.show()
+
+
+@expose
 def simple_path() -> None:
     body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
     system = PySystem(root=body)
@@ -247,6 +301,49 @@ def simple_path() -> None:
     plt.plot(x_pts[0], z_pts[0], 'yo')
     plt.axis('equal')
     plt.show()
+
+
+@expose
+def simple_hyperbolic_path() -> None:
+    body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
+    system = PySystem(root=body)
+    r = PyVector(-719081127257.4052, -364854624247.8101, -14595231066.51168)
+    v = PyVector(7320.0, 21000.0, -0211.0)
+    path_ = path.PyFlightPath(system, r, v, 0)
+
+    # Get points to plot
+    x_pts = []
+    y_pts = []
+    z_pts = []
+
+    for i in range(N_POINTS):
+        t = 374942509.78053558 * 2 / N_POINTS * i
+        predicted: path.PyKinematicData = path_.predict(t)
+        x_pts.append(predicted.r.x)
+        y_pts.append(predicted.r.y)
+        z_pts.append(predicted.r.z)
+
+    # Plot
+
+    plt.figure(1)
+    gs = gridspec.GridSpec(1, 2)
+    plt.subplots_adjust(hspace=0.5, wspace=0.35)
+
+    plt.subplot(gs[0, 0])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, y_pts, 'r-')  # line
+    plt.plot(r.x, r.y, 'ro')  # current pos
+    plt.plot(x_pts[0], y_pts[0], 'yo')
+    plt.axis('equal')
+
+    plt.subplot(gs[0, 1])
+    plt.plot(0, 0, 'ro')  # Body position.
+    plt.plot(x_pts, z_pts, 'r-')  # line
+    plt.plot(r.x, r.z, 'ro')  # current pos
+    plt.plot(x_pts[0], z_pts[0], 'yo')
+    plt.axis('equal')
+    plt.show()
+
 
 
 @expose

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script for getting needed dependencies and any other pre-build
 tasks done.
