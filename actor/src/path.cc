@@ -205,7 +205,7 @@ bool FlightPath::Remove(const Maneuver &maneuver) {
 }
 
 
-// private methods
+// Private methods
 
 
 void FlightPath::Calculate(const double t) const {
@@ -229,7 +229,7 @@ void FlightPath::Calculate(const double t) const {
     // Add new groups and Calculate() them until end_t extends past
     // time t.
     while (cache_.status.end_t <= t) {
-        // get maneuver (if any) that new SegmentGroup will
+        // Get maneuver (if any) that new SegmentGroup will
         // correspond with.
         const Maneuver * const maneuver = FindManeuver(cache_.status.end_t);
         const Vector r = cache_.status.r;
@@ -538,7 +538,7 @@ FlightPath::CalculationStatus
             if (time_separation < step_duration) {
                 step_duration = time_separation;
                 // Enforce minimum step duration to avoid zeno's
-                // achilles logic.
+                // Achilles and the tortoise logic.
                 if (step_duration < kMinBallisticStepDuration) {
                     step_duration = kMinBallisticStepDuration;
                     break;  // There is no point in finding a closer peer body.
@@ -547,7 +547,7 @@ FlightPath::CalculationStatus
         }
         if (!(step_duration > 0.0)) {
             throw std::runtime_error("FlightPath::BallisticSegment::Calculate()"
-                    "step_duration was not > 0. value: " +
+                    " : step_duration was not > 0. value: " +
                     std::to_string(step_duration));
         }
         double new_t = step_t + step_duration;
