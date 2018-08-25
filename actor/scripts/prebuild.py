@@ -15,7 +15,6 @@ EIGEN_INCLUDE_DIR_NAME = 'Eigen'
 EIGEN_DIR = os.path.join(THIRD_PARTY_DIR, EIGEN_INCLUDE_DIR_NAME)
 
 EIGEN_URL = 'https://github.com/eigenteam/eigen-git-mirror/archive/3.3.4.zip'
-ROOT_ZIP_DIR_NAME = os
 
 
 def git_zip_base_name(url: str) -> str:

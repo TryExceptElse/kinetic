@@ -150,10 +150,6 @@ def burn_plot() -> None:
 
 @expose
 def simple_orbit() -> None:
-    # r = PyVector(17_244_712.0, -31_694_791.0, -2_036_457.0)
-    # v = PyVector(430.0, 1239.0, -0211.0)
-    # r = PyVector(617244712358.0, -431694791368.0, -402036457087.0)
-    # v = PyVector(7320.0, 11329.0, -0211.0)
     r = PyVector(617244712358.0, -431694791368.0, -12036457087.0)
     v = PyVector(7320.0, 11329.0, -0211.0)
     orbit = PyOrbit(u=const.G * 1.98891691172467e30, r=r, v=v)
@@ -343,7 +339,6 @@ def simple_hyperbolic_path() -> None:
     plt.plot(x_pts[0], z_pts[0], 'yo')
     plt.axis('equal')
     plt.show()
-
 
 
 @expose

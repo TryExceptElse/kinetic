@@ -489,12 +489,11 @@ FlightPath::CalculationStatus
     // Get max step duration. This value may be reduced later.
     // If orbit is elliptical (e < 1) it should be some fraction of
     // an orbital period. Otherwise, roughly proportional to the
-    // amount of time potentially requred to escape the primary body's
+    // amount of time potentially required to escape the primary body's
     // sphere of influence.
-    const double maxStepDuration = orbit_.eccentricity() < 1.0 ?
+    const double max_step_duration = orbit_.eccentricity() < 1.0 ?
             orbit_.period() * kMaxOrbitPeriodDurationPerStep :
-            primary_body_.sphere_of_influence() / orbit_.max_speed() *
-            kMaxOrbitPeriodDurationPerStep;
+            2 * PI / orbit_.mean_motion() * kMaxOrbitPeriodDurationPerStep;
     // Create array of bodies in sphere of influence,
     // and their max speed.
     // These bodies, which share the same parent as the segment, are
@@ -514,7 +513,7 @@ FlightPath::CalculationStatus
     while (calculation_status_.end_t <= t) {
         double step_t = calculation_status_.end_t;
         // Find duration of step.
-        double step_duration = maxStepDuration;
+        double step_duration = max_step_duration;
         // Reduce step_duration if a peer sphere of influence may
         // be intersected.
         // Find smallest time-separation between predicted position and any
