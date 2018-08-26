@@ -127,6 +127,35 @@ TEST_CASE( "test add method adds maneuver to path", "[Path]" ) {
 }
 
 
+TEST_CASE( "test path can calculate with multiple burns", "[Path]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 5.972e24, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712.0, -431694791.0, -12036457.0);
+    const kin::Vector v(132.00, 632.90, -21.10);
+    kin::FlightPath path(system, r, v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 20000);
+    const double burn_start_t = period0 / 2;
+
+    const kin::Maneuver maneuver(
+        kin::Maneuver::kPrograde,
+        1,
+        performance,
+        150,
+        burn_start_t
+    );
+    path.Add(maneuver);
+
+    const int n_points = 100;
+    for (int i = 0; i < n_points; ++i) {
+        const double t = period0 / n_points * i;
+        path.Predict(t);
+    }
+}
+
+
 TEST_CASE( "test path calc continues incomplete groups", "[Path]" ) {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);

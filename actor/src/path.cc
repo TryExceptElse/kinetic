@@ -550,7 +550,7 @@ FlightPath::CalculationStatus
                     std::to_string(step_duration));
         }
         double new_t = step_t + step_duration;
-        calculation_status_.end_t = step_t + step_duration;
+        calculation_status_.end_t = new_t;
         // Advance calculation status
         const Orbit orbit_prediction = orbit_.Predict(new_t - t0_);
         const Vector local_position = orbit_prediction.position();
