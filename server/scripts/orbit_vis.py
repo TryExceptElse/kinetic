@@ -33,19 +33,19 @@ def expose(f):
 
 @expose
 def position_plot() -> None:
-    body = PyBody(gm=const.G * 1.98891691172467e30, r=10)
+    body = PyBody(gm=const.G * 5.972e24, r=10)
     system = PySystem(root=body)
     r = PyVector(617_244_712.0, -431_694_791.0, -12_036_457.0)
-    v = PyVector(1320.0, 6329.0, -0211.0)
+    v = PyVector(132.00, 632.90, -21.1)
     path_ = path.PyFlightPath(system, r, v, 0)
 
-    period0 = 374942509.78053558
+    period0 = 374942509.78053558 / 25
     performance = path.PyPerformanceData(3000, 20000)  # ve, thrust
-    burn_start_t = period0 / 2
+    burn_start_t = period0 / 4
 
     maneuver = path.PyManeuver(
         path.PyManeuver.Types.Prograde,
-        1,
+        100,
         performance,
         150,
         burn_start_t
