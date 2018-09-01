@@ -1,6 +1,7 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <chrono>
 
 #include "catch.hpp"
 
@@ -643,6 +644,34 @@ TEST_CASE( "test hyperbolic path completes", "[BallisticSegmentGroup]" ) {
         const kin::KinematicData predicted = path.Predict(t);
     }
     // If execution reaches here, test has essentially passed.
+}
+
+TEST_CASE( "test hyperbolic path calc time", "[BallisticSegmentGroup]" ) {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10);
+    const kin::System system(std::move(body));
+    const kin::Vector r(
+        -719081127257.4052, -364854624247.8101, -14595231066.51168);
+    const kin::Vector v(7320.0, 21000.0, -0211.0);
+    const kin::FlightPath path(system, r, v, 0);
+
+    constexpr int n_points = 64;
+    // T limit is here 1/4 the frame time of (1/64s == 0.16s) on the
+    // running computer.
+    constexpr double t_limit = 0.004;  // Max elapsed time in seconds.
+
+    const std::chrono::system_clock::time_point t0 =
+        std::chrono::system_clock::now();  // Get time_point.
+    for (int i = 0; i < n_points; ++i) {
+        const double t = 374942509.78053558 * 2 / n_points * i;
+        const kin::KinematicData predicted = path.Predict(t);
+    }
+    const std::chrono::system_clock::time_point tf =
+        std::chrono::system_clock::now();  // Get time_point.
+    const std::chrono::duration<double> elapsed_s = tf - t0;
+
+    // Test that entire calculation does not extend for unreasonable time.
+    REQUIRE( elapsed_s.count() < t_limit );
 }
 
 // MANEUVER SEGMENT GROUP ---------------------------------------------
