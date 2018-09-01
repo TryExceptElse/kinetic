@@ -18,16 +18,20 @@
 
 namespace kin {
 
+namespace constants {
 
 constexpr double PI = 3.1415926535897932384626433832795028841971;
 constexpr double TAU = PI * 2;
-constexpr double Em11 = 0.00000000001;
-constexpr double G = 6.67300 * Em11;
-constexpr double E24 = 1000000000000000000000000.0;
-constexpr double E24m11 = 10000000000000.0;
-constexpr double km = 1000.0;
+constexpr double G = 6.67300e-11;
 constexpr double e = 2.71828182845904523536;
 
+}  // namespace constants
+
+// Elevate most commonly used and unambiguous constants to the
+// kin namespace.
+using constants::PI;
+using constants::TAU;
+using constants::G;
 
 }  // namespace kin
 

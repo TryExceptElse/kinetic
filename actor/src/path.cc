@@ -49,7 +49,7 @@ Maneuver::Maneuver(const Vector vector,
         dv_(dv), performance_(performance), m0_(m0), t0_(t0) {}
 
 double Maneuver::mass_fraction() const {
-    return 1 - std::pow(e, -dv_ / performance_.ve());
+    return 1 - std::pow(constants::e, -dv_ / performance_.ve());
 }
 
 double Maneuver::duration() const {
