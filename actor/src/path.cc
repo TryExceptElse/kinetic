@@ -553,18 +553,16 @@ FlightPath::CalculationStatus
         calculation_status_.end_t = new_t;
         // Advance calculation status
         const Orbit orbit_prediction = orbit_.Predict(new_t - t0_);
-        const Vector local_position = orbit_prediction.position();
-        const Vector local_velocity = orbit_prediction.velocity();
-        const Vector system_position =
-            local_position + primary_body_.PredictSystemPosition(new_t);
-        const Vector system_velocity =
-            local_velocity + primary_body_.PredictSystemVelocity(new_t);
-        calculation_status_.r = system_position;
-        calculation_status_.v = system_velocity;
+        const KinematicData local_data = orbit_prediction.kinematic_data();
+        const KinematicData parent_body_system_data =
+            primary_body_.PredictSystemKinematicData(new_t);
+        const KinematicData system_data = local_data + parent_body_system_data;
+        calculation_status_.r = system_data.r;
+        calculation_status_.v = system_data.v;
         // If primary influence has changed,
         // this segment's end has been reached.
         const Body &new_primary =
-            system_.FindPrimaryInfluence(system_position, new_t);
+            system_.FindPrimaryInfluence(system_data.r, new_t);
         if (new_primary.id() != primary_body_.id()) {
             break;
         }

@@ -49,6 +49,15 @@ double Body::sphere_of_influence() const {
 
 Orbit Body::Predict(const double t) const { return orbit_->Predict(t); }
 
+KinematicData Body::PredictLocalKinematicData(const double t) const {
+    return HasParent() ? Predict(t).kinematic_data() : KinematicData();
+}
+
+KinematicData Body::PredictSystemKinematicData(const double t) const {
+    return PredictLocalKinematicData(t) + (
+        HasParent() ? parent_->PredictSystemKinematicData(t) : KinematicData());
+}
+
 Vector Body::PredictLocalPosition(const double t) const {
     return HasParent() ? Predict(t).position() : Vector(0, 0, 0);
 }

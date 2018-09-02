@@ -21,20 +21,13 @@
 #include <memory>
 #include "vector.h"
 #include "orbit.h"
+#include "util.h"
 
 namespace kin {
 
 class System;
 
 // --------------------------------------------------------------------
-
-/**
- * Structure containing kinematic information about an object.
- */
-struct KinematicData {
-    Vector r;
-    Vector v;
-};
 
 /**
  * Structure containing information about an orbit.

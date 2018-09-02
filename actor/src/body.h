@@ -24,6 +24,7 @@
 #include "const.h"
 #include "orbit.h"
 #include "vector.h"
+#include "util.h"
 
 namespace kin {
 
@@ -61,6 +62,8 @@ class Body {
     bool AddChild(std::unique_ptr<Body> body);
     bool IsParent(const Body &body);  // Checks if direct parent of passed body.
     Orbit Predict(const double t) const;
+    KinematicData PredictLocalKinematicData(const double t) const;
+    KinematicData PredictSystemKinematicData(const double t) const;
     Vector PredictLocalPosition(const double t) const;
     Vector PredictSystemPosition(const double t) const;
     Vector PredictLocalVelocity(const double t) const;

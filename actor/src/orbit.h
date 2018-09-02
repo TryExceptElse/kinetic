@@ -31,6 +31,7 @@
 #include <memory>
 #include "body.h"
 #include "vector.h"
+#include "util.h"
 
 namespace kin {
 
@@ -75,6 +76,7 @@ class Orbit {
     double max_speed() const;
     Vector position() const;
     Vector velocity() const;
+    KinematicData kinematic_data() const { return {position(), velocity()}; }
 
     void Step(const double time);
     Orbit Predict(const double time) const;
