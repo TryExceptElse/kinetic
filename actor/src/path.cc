@@ -384,7 +384,7 @@ FlightPath::CalculationStatus
     const Orbit initial_orbit(primary_body_, r0_, v0_);
     // Attempt to determine when segment ends.
 
-    const double duration = [this, initial_orbit]() -> double {
+    const double duration_limit = [this, initial_orbit]() -> double {
         // Check first for duration in which maximum mass ratio
         // change occurs.
         const double delta_m = maneuver_.m0() * kMaxMassRatioChangePerStep;
@@ -397,7 +397,8 @@ FlightPath::CalculationStatus
         return std::min(mass_limited_duration, period_limited_duration);
     }();
 
-    const double tf = std::min(t0_ + duration, maneuver_.t1());
+    const double tf = std::min(t0_ + duration_limit, maneuver_.t1());
+    const double duration = tf - t0_;
 
     // Approximate average acceleration over duration of step.
     const Vector thrust_a = [this, tf]() -> Vector {

@@ -370,6 +370,44 @@ TEST_CASE( "Test r and v between segment groups match2", "[Path]") {
              Approx(seg1_start_data.v.z()).epsilon(0.000001) );
 }
 
+TEST_CASE( "Test r and v between segment groups match3", "[Path]") {
+    std::unique_ptr<kin::Body> body =
+        std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
+    const kin::System system(std::move(body));
+    const kin::Vector r(617244712358.0, -431694791368.0, -12036457087.0);
+    const kin::Vector v(7320.0, 11329.0, -0211.0);
+    kin::FlightPath path(system, r, v, 0);
+
+    const double period0 = 374942509.78053558;
+    const kin::PerformanceData performance(3000, 20);  // ve, thrust
+    const double burn_start_t = period0 / 2;
+    const kin::Maneuver maneuver(
+            kin::Maneuver::kPrograde,  // Maneuver Type
+            2,  // DV
+            performance,
+            150.0,  // m0
+            burn_start_t);  // t0
+    path.Add(maneuver);
+
+    const double burn_end_t = maneuver.t1();
+
+    path.GetSegment(burn_end_t); // Calculate.
+
+    const kin::FlightPath::SegmentGroup &seg_group_0 =
+        *path.cache_.groups[burn_start_t];
+    const kin::FlightPath::SegmentGroup &seg_group_1 =
+        *path.cache_.groups[burn_end_t];
+
+    const double seg0_end_t = seg_group_0.calculation_status_.end_t;
+    const double seg1_start_t = seg_group_1.t_;
+
+    // Check that two different segments have been retrieved.
+    REQUIRE( &seg_group_0 != &seg_group_1 );
+
+    // Check that times align.
+    REQUIRE( seg0_end_t == seg1_start_t );
+}
+
 TEST_CASE( "Test t between segments match up", "[Path]") {
     std::unique_ptr<kin::Body> body =
         std::make_unique<kin::Body>(kin::G * 1.98891691172467e30, 10.0);
@@ -421,7 +459,7 @@ TEST_CASE( "Test no abrupt velocity changes occur between segments", "[Path]") {
     const double test_end_t = maneuver.t1() + 3.0;
     const double test_duration = test_end_t - test_start_t;
     const int n_samples = 1000;
-    const double delta_limit = 0.004;
+    const double delta_limit = 0.02;  // 2x what dv should be between any steps.
 
     kin::Vector v, last_v, delta_v;
     double max_delta = 0.0;

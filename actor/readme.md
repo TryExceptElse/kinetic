@@ -28,3 +28,4 @@ than what is listed here is avoided.
 * r : position vector
 * v : velocity vector
 * a : semi-major axis
+* t : time
