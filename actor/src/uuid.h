@@ -31,6 +31,7 @@ namespace kin {
 
 
 std::string GetUUID4();
+std::string GenerateSimpleID();
 
 
 }  // namespace kin

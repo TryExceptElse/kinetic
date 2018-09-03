@@ -1,3 +1,6 @@
+#include <random>
+#include <cmath>
+
 #ifndef __EMSCRIPTEN__
 #include "sole.hpp"
 #endif  // __EMSCRIPTEN__
@@ -12,22 +15,17 @@ namespace kin {
 static constexpr char *kUUIDChars =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-std::string GenerateSimpleUUID() {
+static std::default_random_engine generator;
+static std::uniform_int_distribution<int> distribution(0, sizeof(kUUIDChars));
+
+std::string GenerateSimpleID() {
     std::string uuid = std::string(36, '-');
-    int rnd = 0;
-    int r = 0;
-
     uuid[14] = '4';
-
     for (int i = 0; i < 36; ++i) {
         if (i == 8 || i == 13 || i == 18 || i == 14 || i == 23) {
             continue;
         }
-        if (rnd <= 0x02) {
-            rnd = 0x2000000 + (std::rand() * 0x1000000) | 0;
-        }
-        rnd >>= 4;
-        uuid[i] = kUUIDChars[(i == 19) ? ((rnd & 0xf) & 0x3) | 0x8 : rnd & 0xf];
+        uuid[i] = kUUIDChars[distribution(generator)];
     }
     return uuid;
 }
@@ -35,7 +33,7 @@ std::string GenerateSimpleUUID() {
 #ifndef __EMSCRIPTEN__
 std::string GetUUID4() { return sole::uuid4().str(); }
 #else  // __EMSCRIPTEN__
-using GetUUID4 = GenerateSimpleUUID;
+using GetUUID4 = GenerateSimpleID;
 #endif  // __EMSCRIPTEN__
 
 
