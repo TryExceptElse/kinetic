@@ -2,13 +2,13 @@
 
 #include <stdexcept>
 #include <cmath>
-#include "sole.hpp"
+#include "uuid.h"
 
 namespace kin {
 
 Body::Body(const double GM, const double r, const std::string id,
         Body * const parent, Orbit * const orbit):
-            GM_(GM), r_(r), id_(id.empty() ? sole::uuid4().str() : id) {
+            GM_(GM), r_(r), id_(id.empty() ? GetUUID4() : id) {
     if (parent == nullptr) {
         parent_ = nullptr;
     } else {

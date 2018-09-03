@@ -307,6 +307,8 @@ class FlightPath {
          */
         Segment(const System &system, const Vector r, const Vector v, double t);
 
+        virtual ~Segment() {}
+
         /**
          * Predicts orbital trajectory at passed time.
          * time is relative to universe t0.
@@ -387,6 +389,8 @@ class FlightPath {
      public:
         SegmentGroup(const System &system, const Maneuver * const maneuver,
             const Vector r, const Vector v, double t, double tf = -1.0);
+
+        virtual ~SegmentGroup() {}
 
         /** Gets Orbit object for passed time relative to universe t0. */
         KinematicData Predict(const double t) const;

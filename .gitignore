@@ -17,6 +17,7 @@ build/*
 client/build/*
 server/build/*
 actor/build/*
+actor/build_web/*
 
 # compiled python
 *.pyc

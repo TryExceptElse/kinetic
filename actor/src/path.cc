@@ -189,19 +189,24 @@ void FlightPath::Add(const Maneuver &maneuver) {
 bool FlightPath::Clear() {
     maneuvers_.clear();
     ClearCache();  // Reset calculated data (calculated segments, etc).
+    return true;
 }
 
 bool FlightPath::ClearAfter(const double t) {
     // Clear maneuvers that begin after, but not at time t.
+    const std::size_t initial_size = maneuvers_.size();
     std::map<double, std::unique_ptr<Maneuver> >::iterator first =
         maneuvers_.upper_bound(t);
     maneuvers_.erase(first, maneuvers_.end());
     ClearCache();  // Reset calculated data (calculated segments, etc).
+    return maneuvers_.size() == initial_size;
 }
 
 bool FlightPath::Remove(const Maneuver &maneuver) {
+    const std::size_t initial_size = maneuvers_.size();
     maneuvers_.erase(maneuver.t0());
     ClearCache();  // Reset calculated data (calculated segments, etc).
+    return maneuvers_.size() == initial_size;
 }
 
 

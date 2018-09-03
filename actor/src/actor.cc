@@ -1,6 +1,6 @@
 #include "actor.h"
 
-#include "sole.hpp"
+#include "uuid.h"
 
 namespace kin {
 
@@ -13,7 +13,7 @@ Actor::Actor(const std::string actor_type, const std::string id,
 Actor::Actor(Universe *universe, const std::string actor_type,
         const std::string id, const Vector r, const Vector v):
             universe_(universe),
-            id_(id.empty() ? sole::uuid4().str() : id),
+            id_(id.empty() ? GetUUID4() : id),
             actor_type_(actor_type) {
     // TODO: Initialize path
 }

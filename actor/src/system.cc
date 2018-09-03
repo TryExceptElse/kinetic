@@ -17,13 +17,13 @@
 #include "system.h"
 
 #include <utility>
-#include "sole.hpp"
+#include "uuid.h"
 
 namespace kin {
 
 
 System::System(std::unique_ptr<Body> root):
-        System(sole::uuid4().str(), std::move(root)) {}
+        System(GetUUID4(), std::move(root)) {}
 
 System::System(std::string id, std::unique_ptr<Body> root):
         root_(std::move(root)) {
@@ -68,11 +68,13 @@ bool System::AddActor(Actor *actor) {
     // Add actor to system.
 
     // Returns pair of iterator, bool
+    const std::size_t initial_size = actor_ids.size();
     auto result = actor_ids.insert(actor->id());
     if (result.second) {
         throw std::runtime_error("System::AddActor : "
             "ID Already present in system");
     }
+    return actor_ids.size() == initial_size;
 }
 
 
