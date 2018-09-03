@@ -1,5 +1,4 @@
 #include <random>
-#include <cmath>
 
 #ifndef __EMSCRIPTEN__
 #include "sole.hpp"
@@ -12,11 +11,11 @@ namespace kin {
 // Otherwise, use a custom uuid function to avoid the issues that arise
 // from attempting to use sole.hpp in emscripten.
 
-static const char *kUUIDChars =
-    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+static const char *kUUIDChars = "0123456789abcdef";
 
-static std::default_random_engine generator;
-static std::uniform_int_distribution<int> distribution(0, sizeof(kUUIDChars));
+static std::random_device seed_device;
+static std::mt19937 generator(seed_device());
+static std::uniform_int_distribution<int> distribution(0, 15);
 
 std::string GenerateSimpleID() {
     std::string uuid = std::string(36, '-');
