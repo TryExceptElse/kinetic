@@ -9,7 +9,7 @@ TEST_CASE( "uuid generates distributed values", "[UUID]" ) {
     constexpr long kNGenerations = 100000;
     std::unordered_set<std::string> uuid_set;
     for (long i = 0; i < kNGenerations; ++i) {
-        uuid_set.insert(kin::GenerateSimpleUUID());
+        uuid_set.insert(kin::GenerateSimpleID());
     }
 
     REQUIRE( uuid_set.size() == kNGenerations );

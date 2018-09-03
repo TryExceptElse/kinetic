@@ -12,7 +12,7 @@ namespace kin {
 // Otherwise, use a custom uuid function to avoid the issues that arise
 // from attempting to use sole.hpp in emscripten.
 
-static constexpr char *kUUIDChars =
+static const char *kUUIDChars =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 static std::default_random_engine generator;
@@ -33,7 +33,8 @@ std::string GenerateSimpleID() {
 #ifndef __EMSCRIPTEN__
 std::string GetUUID4() { return sole::uuid4().str(); }
 #else  // __EMSCRIPTEN__
-using GetUUID4 = GenerateSimpleID;
+// Not actually an UUID4, but close enough for what it is used for.
+const auto GetUUID4 = GenerateSimpleID;
 #endif  // __EMSCRIPTEN__
 
 

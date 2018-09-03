@@ -8,7 +8,7 @@ set(CMAKE_C_COMPILER "emcc")
 set(CMAKE_CXX_COMPILER "em++")
 set(CMAKE_CXX_STANDARD 14)
 
-# add_definitions(__VMS)
+set(CMAKE_CXX_FLAGS "-O3")
 
 
 # Set up actor library
@@ -18,6 +18,7 @@ add_library(actor STATIC
     src/orbit.cc
     src/path.cc
     src/system.cc
-    src/universe.cc)
+    src/universe.cc
+    src/uuid.cc)
 
 target_include_directories(actor PUBLIC src third_party/src)
