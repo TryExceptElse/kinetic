@@ -1,7 +1,5 @@
 #cython: c_string_encoding='ascii'
 
-from libc.stdio cimport printf
-
 
 cdef class PyBody:
     def __cinit__(
@@ -37,8 +35,6 @@ cdef class PyBody:
             c_orbit = NULL
         self._body = new Body(id, gm, r, c_parent, c_orbit)
         self.owning = True
-#       Body(const std::string id, const double GM, const double r,
-#               Body *parent = nullptr, Orbit *orbit = nullptr)
 
     def __dealloc__(self):
         if self.owning:

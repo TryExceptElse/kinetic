@@ -1,4 +1,4 @@
-# cython: infer_types=True
+# cython: infer_types=True, language_level=3
 
 import json
 import typing as ty
@@ -39,7 +39,7 @@ class GameMsg:
         d[MSG_TYPE_FIELD] = self.__class__.__name__
         return d
 
-    def __repr__(self) -> unicode:
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}[\'{self.uuid[-8:]}]'
 
 

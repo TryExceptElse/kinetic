@@ -1,7 +1,7 @@
 import sys
 
 from server.server import Server
-from settings import SERVER_ROOT
+from server.settings import SERVER_ROOT
 
 
 def main():

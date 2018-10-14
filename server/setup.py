@@ -33,7 +33,7 @@ setup(
     name='kinetic_server',
     version='0.0.0',
     packages=['server', 'server.model', 'test', 'test.model'],
-    py_modules=['main', 'settings'] + SCRIPT_MODULES,
+    py_modules=['main'] + SCRIPT_MODULES,
     license='Apache License Version 2.0',
     author='TryExceptElse',
     description='The newtonian strategy game.',

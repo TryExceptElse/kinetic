@@ -19,7 +19,7 @@ def build_wasm() -> None:
     except FileNotFoundError as e:
         raise FileNotFoundError(
             'cmake does not appear to be installed. '
-            'On linux it may be installed with "sudo apt-get install cmake"'
+            'With ubuntu it may be installed with "sudo apt-get install cmake"'
         ) from e
     subprocess.run(('cmake', '--build', '.'))
 

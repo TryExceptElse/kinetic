@@ -40,7 +40,7 @@ def get_eigen():
         os.path.join(THIRD_PARTY_DIR, EIGEN_INCLUDE_DIR_NAME)
     )
     os.rmdir(os.path.join(THIRD_PARTY_DIR, root_dir_name))
-    # Remove cmakelist because it shouldn't be there.
+    # Remove CMakeList because it shouldn't be there.
     os.remove(os.path.join(EIGEN_DIR, 'CMakeLists.txt'))
     print('Done.')
 
